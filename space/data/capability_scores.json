@@ -5,7 +5,6 @@
   "_note": "Single-number capability aggregate (a normalized mean of capability benchmarks — built the same way as Raidex's RAI Score). Keyed by Raidex model_name (the leaderboard 'Model' column). Models without a published score on this snapshot's index version are omitted rather than mixed across versions: claude-haiku-4-5, mistral-large-latest, Meta-Llama-3.3-70B-Instruct, Qwen3-235B-A22B-Instruct-2507.",
   "scores": {
     "claude-opus-4-8": 55.7,
-    "gpt-5.5": 55.0,
     "gpt-5.2": 42.2,
     "grok-4.3": 37.6,
     "claude-sonnet-4-6": 35.9,
