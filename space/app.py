@@ -205,8 +205,8 @@ def model_choices():
 # ----------------------------------------------------------------------------
 GREEN = [[0.0, "#0b3d2e"], [1.0, "#16a34a"]]
 RED = [[0.0, "#3d0b0b"], [1.0, "#dc2626"]]
-_LAYOUT = dict(width=1200, height=630, paper_bgcolor="white", plot_bgcolor="white",
-               font=dict(size=16), margin=dict(l=160, r=40, t=80, b=120))
+_LAYOUT = dict(autosize=True, height=560, paper_bgcolor="white", plot_bgcolor="white",
+               font=dict(size=15), margin=dict(l=160, r=40, t=80, b=120))
 
 
 def _empty_fig(title: str):
@@ -388,11 +388,12 @@ with gr.Blocks(title="Raidex") as app:
             refresh_btn.click(lambda: refresh(), None, table)
 
             gr.Markdown("## 🔥 The Gap")
-            with gr.Row():
-                gr.Plot(value=build_capability_heatmap())
-                gr.Plot(value=build_rai_heatmap())
+            # Stacked full-width (not side-by-side) and autosizing — two 1200px figures
+            # in one Row overflowed and got clipped.
+            gr.Plot(value=build_capability_heatmap())
+            gr.Plot(value=build_rai_heatmap())
             gr.Markdown("*Frontier developers report capability benchmarks consistently. "
-                        "RAI benchmarks? Rarely — Raidex runs them anyway.*")
+                        "RAI benchmarks? Rarely — Raidex runs all 8 anyway.*")
 
             with gr.Row():
                 with gr.Column():

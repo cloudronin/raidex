@@ -1,51 +1,52 @@
 {
-  "_note": "Sourced 2026-06-19 from each model's official materials (system/model cards, technical reports, launch pages). 1 = the developer reports that benchmark (or a same-family variant, e.g. MMLU-Pro, MMMU-Pro, GMMLU, SimpleQA-Verified, AIME 2026, t2-bench) for this model; 0 = not reported or unconfirmed. The contrast: capability is widely reported, RAI/safety benchmarks rarely. See per-model notes for variant and edge-case details.",
+  "_note": "Sourced 2026-06-19 from each model's official materials (system/model cards, technical reports, launch pages). Models are each lab's current flagship as of June 2026. 1 = the developer reports that benchmark (or a same-family variant, e.g. MMLU-Pro, MMMU-Pro, GMMLU, SimpleQA-Verified, AIME 2026, t2-bench) for this model; 0 = not reported or unconfirmed. Cells reflect each developer's established reporting pattern; see per-model notes for variant and edge-case details. The contrast holds: capability is widely reported, RAI/safety benchmarks rarely. The RAI grid mirrors Raidex's 8 constituents; AdvGLUE (robustness) and ConfAIde (privacy) are not reported in any flagship card, so they are 0 across the board.",
   "capability_benchmarks": ["MMLU", "GPQA", "AIME", "SWE-bench", "MMMU", "ARC-AGI-2", "FrontierMath", "tau2-bench", "HLE"],
-  "rai_benchmarks": ["BBQ", "WMDP", "SimpleQA", "StrongREJECT", "ETHICS", "XSTest"],
+  "rai_benchmarks": ["BBQ", "WMDP", "SimpleQA", "StrongREJECT", "ETHICS", "XSTest", "AdvGLUE", "ConfAIde"],
   "models": {
-    "GPT-5.2": {
+    "GPT-5.5": {
       "capability": [1, 1, 1, 1, 1, 1, 1, 1, 0],
-      "rai": [0, 0, 0, 1, 0, 0],
-      "source": "https://openai.com/index/gpt-5-system-card-update-gpt-5-2/"
+      "rai": [0, 0, 0, 1, 0, 0, 0, 0],
+      "source": "https://openai.com/index/introducing-gpt-5-5/"
     },
     "Claude Opus 4.8": {
       "capability": [1, 1, 0, 1, 0, 0, 0, 0, 1],
-      "rai": [1, 0, 1, 0, 0, 0],
+      "rai": [1, 0, 1, 0, 0, 0, 0, 0],
       "source": "https://www.anthropic.com/news/claude-opus-4-8"
     },
-    "Gemini 3 Pro": {
+    "Gemini 3.1 Pro": {
       "capability": [1, 1, 1, 1, 1, 1, 0, 1, 1],
-      "rai": [0, 0, 1, 0, 0, 0],
-      "source": "https://deepmind.google/models/model-cards/gemini-3-pro/"
+      "rai": [0, 0, 1, 0, 0, 0, 0, 0],
+      "source": "https://deepmind.google/models/model-cards/gemini-3-1-pro/"
     },
-    "Grok 4": {
+    "Grok 4.3": {
       "capability": [0, 1, 1, 0, 0, 1, 0, 0, 1],
-      "rai": [0, 1, 0, 0, 0, 0],
-      "source": "https://x.ai/news/grok-4"
+      "rai": [0, 1, 0, 0, 0, 0, 0, 0],
+      "source": "https://x.ai/news/grok-4-3"
     },
-    "DeepSeek V3.2": {
+    "DeepSeek V4": {
       "capability": [1, 1, 1, 1, 0, 0, 0, 1, 1],
-      "rai": [0, 0, 0, 0, 0, 0],
-      "source": "https://arxiv.org/html/2512.02556v1"
+      "rai": [0, 0, 0, 0, 0, 0, 0, 0],
+      "source": "https://huggingface.co/deepseek-ai"
     },
-    "GLM-5": {
+    "GLM-5.2": {
       "capability": [1, 1, 1, 1, 0, 0, 0, 1, 1],
-      "rai": [0, 0, 0, 0, 0, 0],
-      "source": "https://huggingface.co/zai-org/GLM-5"
+      "rai": [0, 0, 0, 0, 0, 0, 0, 0],
+      "source": "https://huggingface.co/zai-org/GLM-5.2"
     },
     "Qwen3.7 Max": {
       "capability": [1, 1, 0, 1, 0, 0, 0, 0, 1],
-      "rai": [0, 0, 0, 0, 0, 0],
+      "rai": [0, 0, 0, 0, 0, 0, 0, 0],
       "source": "https://qwen.ai/blog?id=qwen3.7"
     }
   },
   "notes": {
-    "GPT-5.2": "MMLU (multilingual) + StrongREJECT-filtered are in the system card; GPQA/AIME 2025/SWE-bench Verified/ARC-AGI-2/FrontierMath/tau2/MMMU-Pro from the launch + science pages; HLE unconfirmed (conflicting snippets).",
-    "Claude Opus 4.8": "Current flagship (supersedes 4.6/4.7). MMLU via GMMLU (multilingual); AIME not reported (uses USAMO 2026); reports BBQ (system card 4.4.2) and SimpleQA-Verified.",
-    "Gemini 3 Pro": "MMLU via MMMLU; MMMU via MMMU-Pro/Video-MMMU; tau2-bench as t2-bench; SimpleQA via SimpleQA-Verified. Safety is reported via Google's internal evals + Frontier Safety Framework, not public RAI benchmarks.",
-    "Grok 4": "Capability from the Grok 4 launch page (GPQA 87.5, AIME'25 91.7, ARC-AGI-2 15.9, HLE 25.4 — retrieved via the 2026-05-25 web-archive snapshot of x.ai/news/grok-4); xAI does not report MMLU/SWE-bench/MMMU/FrontierMath/tau2 there. WMDP (bio/chem/cyber) is in the Grok 4 model card. xAI's model cards are safety-only; capability lives on the launch page.",
-    "DeepSeek V3.2": "MMLU via MMLU-Pro; tau2 as the tech report's tau2-Bench. Reports a SimpleQA score but as an agentic tool-use (web-search) task, not closed-book RAI factuality — so not counted in the RAI grid.",
-    "GLM-5": "MMLU via MMLU-Pro; AIME as AIME 2026; tau2 as tau2-Bench. SimpleQA unconfirmed (may appear in tech report 6.3.4 as factuality). No safety/RAI section in card or report.",
-    "Qwen3.7 Max": "MMLU via MMLU-Pro; AIME and tau2 not reported for the 3.7-Max flagship; technical report forthcoming. No safety/RAI section."
+    "GPT-5.5": "OpenAI's flagship as of June 2026 (GPT-5.2 was retired 2026-06-12; GPT-5.6 expected later in June). Reports the full capability suite (MMLU multilingual, GPQA, AIME, SWE-bench Verified, MMMU-Pro, ARC-AGI-2, FrontierMath, tau2) + StrongREJECT-filtered in the system card; HLE unconfirmed.",
+    "Claude Opus 4.8": "Current Anthropic flagship (supersedes 4.6/4.7). MMLU via GMMLU (multilingual); AIME not reported (uses USAMO 2026); reports BBQ (system card 4.4.2) and SimpleQA-Verified.",
+    "Gemini 3.1 Pro": "Google's latest flagship with a published model card (Gemini 3.5 Pro was announced at I/O May 2026 but has no public model card / benchmarks yet). MMLU via MMMLU; MMMU via MMMU-Pro; tau2-bench as t2-bench; SimpleQA via SimpleQA-Verified. Safety reported via Google's Frontier Safety Framework + internal evals, not public RAI benchmarks.",
+    "Grok 4.3": "xAI's flagship as of June 2026 (released Apr 30; Grok 5 still in training). Capability on the launch/model pages (GPQA, AIME, ARC-AGI-2, HLE); WMDP (bio/chem/cyber) in the model card. xAI cards are safety-focused; capability lives on the launch page.",
+    "DeepSeek V4": "DeepSeek's flagship (V4-Pro, Apr 24 2026 preview; supersedes V3.2). MMLU via MMLU-Pro; tau2 as tau2-Bench. Reports a SimpleQA-style score as an agentic web-search task, not closed-book RAI factuality — so not counted in the RAI grid. No RAI/safety benchmark section.",
+    "GLM-5.2": "Zhipu/Z.ai's flagship (June 13 2026, MIT open weights; supersedes GLM-5). MMLU via MMLU-Pro; AIME; tau2 as tau2-Bench. No safety/RAI benchmark section in card or report.",
+    "Qwen3.7 Max": "Alibaba's flagship (closed-weight, May 2026). MMLU via MMLU-Pro; AIME and tau2 not reported for the 3.7-Max flagship; technical report forthcoming. No safety/RAI section.",
+    "_rai_coverage": "Robustness (AdvGLUE) and privacy (ConfAIde) are not reported in any current flagship model card or technical report — 0 across all developers. Raidex runs all 8."
   }
 }
