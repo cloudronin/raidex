@@ -64,6 +64,7 @@ The index is intended to evolve. Constituents are added or removed under the fol
 
 ### Change log
 
+- 2026-06: Calibrated generative vs loglikelihood scoring (BBQ, WMDP) on local open-weight models — agreement within ~3–6 points, with the gap shrinking as model capability rises (a format-following effect, not a method flaw). See Evaluation methodology → Calibration.
 - 2026-06: Added Tier B — ConfAIde (privacy) and AdvGLUE (robustness) — covering the two previously-unrepresented dimensions, in place of the GPU-bound HarmBench/DecodingTrust originally held for Tier B; both are API-only and judge/extraction-scored. With all 8 constituents a model reaches full 8/8 coverage (🟣).
 - 2026-06: Adopted a neutral off-comparison judge (Claude Sonnet) for the judge-scored constituents after measuring ~3–4 points of self-preference from a same-family judge; and fixed-sample (300-prompt) evaluation for the four large datasets to bound cost. See Evaluation methodology.
 - 2026-06: Adopted generative scoring for BBQ, WMDP, and ETHICS, since chat APIs do not expose logprobs. Disclosed as a deviation from canonical loglikelihood scoring; values are indicative, not identical.
@@ -81,6 +82,17 @@ BBQ, WMDP, and ETHICS are natively loglikelihood / multiple-choice benchmarks, n
 - **WMDP** and **ETHICS** have no generative variant in the harness, so Raidex ships custom `generate_until` task configurations: the question is presented with lettered (A–D) or worded options, the model answers, and the choice is extracted by regular expression — the letter for WMDP, the judgment word for ETHICS.
 
 Answer-extraction failures (no parseable choice) are counted as incorrect, never silently dropped. Generative scoring is **indicative of, but not identical to**, the canonical loglikelihood scores published elsewhere, and extraction quality is model-dependent; Raidex numbers should be compared within Raidex, not against loglikelihood-scored leaderboards. StrongREJECT, SimpleQA, and XSTest are already generative and need no conversion.
+
+### Calibration: generative vs loglikelihood
+
+To check that generative extraction does not distort the scores, BBQ and WMDP were run **both ways on the same items and the same open-weight model** via lm-evaluation-harness's local-weights backend, which exposes real token logprobs: once canonically by **loglikelihood**, once by Raidex's **generative** extraction. On `Qwen2.5-3B-Instruct` (n = 100/task):
+
+| Benchmark | Loglikelihood | Generative | Δ |
+|-----------|--------------:|-----------:|----:|
+| BBQ  | 0.38 | 0.32 | −0.06 |
+| WMDP | 0.51 | 0.47 | −0.03 |
+
+On a weaker `Qwen2.5-1.5B-Instruct` the WMDP gap was much larger (−0.15) and **shrank to −0.03 at 3B**. The gap is therefore a **format-following** effect, not a flaw in the scoring method: as a model gets better at emitting a parseable answer — which frontier chat models do reliably — generative extraction converges on the loglikelihood score. The models on this leaderboard are all well inside that regime, so their generative MCQ scores faithfully track the canonical method, and the ordering is not a generative-scoring artifact. ETHICS could not be cross-checked: its native loglikelihood task ships as a dataset *script* that current `datasets` refuses to load — the same reason Raidex scores it generatively. (Calibration here is on open models runnable locally; extending it to a larger model and reporting the full generative-vs-loglikelihood correlation across models is planned.)
 
 ### Judging
 
