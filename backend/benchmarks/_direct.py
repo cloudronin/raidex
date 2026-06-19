@@ -19,6 +19,11 @@ from pathlib import Path
 import litellm
 import yaml
 
+# Drop provider-unsupported params instead of raising — mirrors the lm-eval proxy's
+# --drop_params. Critical for models like claude-opus-4-8 that reject temperature=0
+# (only temperature=1 allowed); without this, every direct call to them errors out.
+litellm.drop_params = True
+
 _CONFIG = None
 
 # Retry/backoff for transient provider errors (429 / timeout). litellm performs the
@@ -108,7 +113,7 @@ def failure_error(n_failed: int, n_total: int) -> str | None:
         return "no samples evaluated (0 calls)"
     if n_failed / n_total > MAX_FAILURE_RATE:
         return (f"{n_failed}/{n_total} API calls failed after {NUM_RETRIES} retries "
-                f"(likely rate-limited); result unreliable")
+                f"(rate-limit/timeout/unsupported-param — see DLQ sample_errors); result unreliable")
     return None
 
 
