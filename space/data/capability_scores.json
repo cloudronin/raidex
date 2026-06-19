@@ -2,7 +2,7 @@
   "_metric": "Artificial Analysis Intelligence Index",
   "_snapshot": "2026-06-18",
   "_source": "https://artificialanalysis.ai/evaluations/artificial-analysis-intelligence-index (snapshot via benchlm.ai aggregation)",
-  "_note": "Single-number capability aggregate (a normalized mean of capability benchmarks — built the same way as Raidex's RAI Score). Keyed by Raidex model_name (the leaderboard 'Model' column). Models without a published score on this snapshot's index version are omitted rather than mixed across versions: claude-haiku-4-5, mistral-large-latest, Meta-Llama-3.3-70B-Instruct, Qwen3-235B-A22B-Instruct-2507.",
+  "_note": "Single-number capability aggregate (a normalized mean of capability benchmarks — built the same way as Raidex's RAI Score). Keyed by Raidex model_name (the leaderboard 'Model' column). Models without a published score on this snapshot's index version are omitted rather than mixed across versions: claude-haiku-4-5, mistral-large-latest, Qwen3-235B-A22B-Instruct-2507. Meta-Llama-3.3-70B-Instruct added from the artificialanalysis.ai model page (AA index ~14, v4.0 — consistent with this snapshot's gpt-4o~11 scale).",
   "scores": {
     "claude-opus-4-8": 55.7,
     "gpt-5.2": 42.2,
@@ -11,6 +11,7 @@
     "DeepSeek-V3.2": 24.7,
     "gpt-oss-120b": 23.8,
     "gemini-2.5-flash": 14.1,
+    "Meta-Llama-3.3-70B-Instruct": 14.0,
     "gpt-4o": 11.2,
     "gpt-4o-mini": 6.9,
     "gemma-3-27b-it": 4.8
