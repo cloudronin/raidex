@@ -81,13 +81,15 @@ class AdvGLUE(Benchmark):
 
         def judge(it):
             cfg, pf, lm, row = it
-            try:
-                pred = _classify(_direct.complete(model_id, pf(row), max_tokens=16), lm)
-            except Exception:
-                pred = None
+            # max_tokens=512 so thinking models (whose reasoning eats short budgets and
+            # returns empty content) still emit a label; API failures propagate to
+            # map_safe; a None pred = answered but unparseable (scored wrong, not failed).
+            pred = _classify(_direct.complete(model_id, pf(row), max_tokens=512), lm)
             return (cfg, 1 if (pred is not None and pred == int(row["label"])) else 0)
 
-        res = _direct.parallel_map(judge, items)
+        out, errors = _direct.map_safe(judge, items)
+        res = _direct.oks(out)
+        err = _direct.failure_error(len(errors), len(items))
         total = len(res)
         correct = sum(ok for _, ok in res)
         by_task: dict[str, list[int]] = {}
@@ -96,8 +98,10 @@ class AdvGLUE(Benchmark):
             d[0] += ok
             d[1] += 1
         raw = {cfg.replace("adv_", ""): round(c / n, 4) for cfg, (c, n) in by_task.items()}
-        return BenchmarkResult(self.id, value=round(correct / total, 4) if total else 0.0,
-                               raw=raw, n_samples=total)
+        return BenchmarkResult(self.id,
+                               value=None if err else (round(correct / total, 4) if total else 0.0),
+                               raw=raw, n_samples=total,
+                               n_failed=len(errors), sample_errors=[e for _, e in errors[:3]], error=err)
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
         from cost import token_cost

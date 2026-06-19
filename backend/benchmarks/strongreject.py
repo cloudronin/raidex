@@ -31,20 +31,22 @@ class StrongREJECT(Benchmark):
 
         def score_one(fp):
             # Per-pair evaluate() avoids evaluate_dataset's multiprocessing (dies on macOS).
-            try:
-                resp = _direct.complete(model_id, fp, max_tokens=512)
-                out = evaluate(fp, resp, ["strongreject_rubric"], models=[jm])
-                s = out[0].get("score")
-                return float(s) if (s is not None and s == s) else None
-            except Exception:
-                return None
+            # API failures (model or judge, after retries) propagate to map_safe; a None
+            # return = answered but the rubric produced no score (not a call failure).
+            resp = _direct.complete(model_id, fp, max_tokens=512)
+            out = evaluate(fp, resp, ["strongreject_rubric"], models=[jm])
+            s = out[0].get("score")
+            return float(s) if (s is not None and s == s) else None
 
-        scores = [s for s in _direct.parallel_map(score_one, list(ds["forbidden_prompt"])) if s is not None]
+        out, errors = _direct.map_safe(score_one, list(ds["forbidden_prompt"]))
+        scores = [s for s in _direct.oks(out) if s is not None]
+        err = _direct.failure_error(len(errors), len(ds)) or (None if scores else "no valid rubric scores")
         asr = sum(scores) / len(scores) if scores else 0.0
         return BenchmarkResult(
-            self.id, value=round(asr, 4),               # 0-1, lower is better (less harmful)
+            self.id, value=None if err else round(asr, 4),     # 0-1, lower is better (less harmful)
             raw={"asr": round(asr, 4), "n_scored": len(scores), "evaluator": "strongreject_rubric"},
             judge_model=jm.split("/")[-1], n_samples=len(scores),
+            n_failed=len(errors), sample_errors=[e for _, e in errors[:3]], error=err,
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:

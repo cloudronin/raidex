@@ -1,0 +1,70 @@
+name: Poll submission queue
+
+# Drains the raidex-requests queue: evaluates submitted models with the fixed
+# pipeline and uploads results to raidex-results (the Space then shows them on its
+# next load/refresh). Runs on a schedule + on demand.
+#
+# COST EXPOSURE: the Submit form is public, so this spends real API budget on
+# whatever models people queue. It is bounded per run by:
+#   RAIDEX_POLL_MAX      - models evaluated per invocation (default 1)
+#   RAIDEX_POLL_LIMIT    - per-benchmark sample size (300; keeps per-model cost ~$2-15)
+#   RAIDEX_PER_MODEL_USD - hard per-model cost ceiling (run_eval aborts above it)
+# Worst case ≈ (runs/day) x RAIDEX_POLL_MAX x RAIDEX_PER_MODEL_USD. With the defaults
+# below (every 6h, max 1, $25) that is ~$100/day if the queue is flooded. Tighten the
+# cron / max, or add an allowlist or approval field, to reduce it.
+#
+# REQUIRED REPO SECRETS (Settings > Secrets and variables > Actions):
+#   HF_TOKEN            - HuggingFace WRITE token (upload results + update request status)
+#   HUGGINGFACE_API_KEY - HF INFERENCE token (for litellm huggingface/ models)
+#   OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, MISTRAL_API_KEY,
+#   SAMBANOVA_API_KEY, XAI_API_KEY - provider keys for whichever models you accept.
+# Models whose provider key is absent simply fail gracefully (request marked failed).
+# ANTHROPIC_API_KEY also powers the neutral judge (claude-sonnet-4-6).
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"        # every 6 hours
+  workflow_dispatch:
+    inputs:
+      max_models:
+        description: "Max models to evaluate this run"
+        default: "1"
+      limit:
+        description: "Per-benchmark sample size (blank/0 = full)"
+        default: "300"
+
+# Never run two pollers at once (they'd double-evaluate the same request).
+concurrency:
+  group: raidex-poller
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend deps
+        run: pip install -r backend/requirements.txt
+      - name: Drain the queue
+        working-directory: backend
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          SAMBANOVA_API_KEY: ${{ secrets.SAMBANOVA_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          RAIDEX_JUDGE_MODEL: anthropic/claude-sonnet-4-6
+          RAIDEX_CONCURRENCY: "4"
+          RAIDEX_PER_MODEL_USD: "25"
+          RAIDEX_POLL_MAX: ${{ github.event.inputs.max_models || '1' }}
+          RAIDEX_POLL_LIMIT: ${{ github.event.inputs.limit || '300' }}
+        run: python runner.py --poll

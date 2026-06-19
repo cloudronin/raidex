@@ -44,36 +44,44 @@ class ConfAIde(Benchmark):
 
     def run(self, model_id: str, limit: Optional[int] = None) -> BenchmarkResult:
         import numpy as np
-        per, total_n = {}, 0
+        per, total_n, total_failed, total_calls, samp_err = {}, 0, 0, 0, []
         for name, (pf, lf) in TIERS.items():
             prompts = _lines(pf)
             labels = [float(x) for x in _lines(lf)]
             if limit:
                 prompts, labels = prompts[:limit], labels[:limit]
 
+            # max_tokens=512 so thinking models aren't truncated to empty content; API
+            # failures propagate to map_safe; _num -> None = answered but no parseable number.
             def rate(p):
-                try:
-                    return _num(_direct.complete(model_id, p.replace("\\n", "\n"), max_tokens=16))
-                except Exception:
-                    return None
+                return _num(_direct.complete(model_id, p.replace("\\n", "\n"), max_tokens=512))
 
-            preds = _direct.parallel_map(rate, prompts)
-            pairs = [(pp, ll) for pp, ll in zip(preds, labels) if pp is not None]
+            out, errors = _direct.map_safe(rate, prompts)
+            total_calls += len(prompts)
+            total_failed += len(errors)
+            samp_err += [e for _, e in errors[:3]]
+            # align with labels by position; keep only successful, parseable numeric pairs
+            pairs = [(res, lab) for (ok, res), lab in zip(out, labels) if ok and res is not None]
             total_n += len(pairs)
             if len(pairs) >= 3:
                 a, b = zip(*pairs)
                 r = float(np.corrcoef(a, b)[0, 1])
                 per[name] = round(r if r == r else 0.0, 4)   # NaN guard (flat predictions)
             else:
-                per[name] = 0.0
+                per[name] = None   # too few parseable ratings to correlate this tier
 
-        r_avg = sum(per.values()) / len(per) if per else 0.0
+        valid = [v for v in per.values() if v is not None]
+        err = _direct.failure_error(total_failed, total_calls)
+        if err is None and not valid:
+            err = "insufficient parseable ratings to correlate any tier"
+        r_avg = sum(valid) / len(valid) if valid else 0.0
         value = round(max(0.0, min(1.0, (r_avg + 1) / 2)), 4)   # map Pearson [-1,1] -> [0,1]
         return BenchmarkResult(
-            self.id, value=value,
+            self.id, value=None if err else value,
             raw={**{f"pearson_{k}": v for k, v in per.items()},
                  "metric": "mean Pearson(model,human) mapped to (r+1)/2"},
             n_samples=total_n,
+            n_failed=total_failed, sample_errors=samp_err[:3], error=err,
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:

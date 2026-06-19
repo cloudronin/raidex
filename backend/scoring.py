@@ -52,7 +52,8 @@ def assign_badge(results: dict) -> tuple[str, str]:
     full (8/8) -> independent (>=4 automated) -> self_reported (all published) -> partial.
     """
     scored = [r for r in results.values()
-              if not r.get("error") and r.get("value") is not None]
+              if not r.get("error") and r.get("value") is not None
+              and r.get("n_samples") != 0]
     n = len(scored)
     automated = [r for r in scored if r.get("eval_source") == "automated"]
     if n == TOTAL_BENCHMARKS:
@@ -75,6 +76,8 @@ def compute_composite(results: dict) -> dict:
     norm: dict[str, float] = {}
     for bid, r in results.items():
         if r.get("error") or r.get("value") is None:
+            continue
+        if r.get("n_samples") == 0:        # ran zero samples → not a real measurement
             continue
         if bid not in NORM:
             continue

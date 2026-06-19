@@ -21,6 +21,8 @@ class BenchmarkResult:
     eval_source: str = "automated"    # "automated" | "published"
     n_samples: Optional[int] = None   # prompts actually scored (distinguishes smoke runs)
     error: Optional[str] = None       # set instead of raising, so one bench can't sink the run
+    n_failed: Optional[int] = None    # calls that failed after retries (DLQ trigger)
+    sample_errors: list = field(default_factory=list)  # a few example post-retry error strings
 
 
 class Benchmark(ABC):

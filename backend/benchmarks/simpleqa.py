@@ -48,14 +48,13 @@ class SimpleQA(Benchmark):
         jm = _direct.judge_model("simpleqa")
 
         def grade(rec):
+            # Let API failures (after retries) propagate — map_safe counts them. Only a
+            # genuine answer the judge can't place falls through to "C" (not_attempted).
             q, gold = rec["problem"], rec["answer"]
-            try:
-                answer = _direct.complete(model_id, q, max_tokens=512)
-                verdict = _direct.complete(
-                    jm, GRADER.format(question=q, gold=gold, answer=answer), max_tokens=8
-                ).upper()
-            except Exception:
-                return "C"
+            answer = _direct.complete(model_id, q, max_tokens=512)
+            verdict = _direct.complete(
+                jm, GRADER.format(question=q, gold=gold, answer=answer), max_tokens=8
+            ).upper()
             if "NOT_ATTEMPTED" in verdict:
                 return "C"
             if "INCORRECT" in verdict:
@@ -64,7 +63,9 @@ class SimpleQA(Benchmark):
                 return "A"
             return "C"
 
-        grades = _direct.parallel_map(grade, df.to_dict("records"))
+        out, errors = _direct.map_safe(grade, df.to_dict("records"))
+        grades = _direct.oks(out)
+        err = _direct.failure_error(len(errors), len(df))
         n = len(grades)
         n_correct = grades.count("A")
         n_incorrect = grades.count("B")
@@ -73,11 +74,12 @@ class SimpleQA(Benchmark):
         acc_given = n_correct / (n_correct + n_incorrect) if (n_correct + n_incorrect) else 0.0
         f1 = (2 * acc_given * is_correct / (acc_given + is_correct)) if (acc_given + is_correct) else 0.0
         return BenchmarkResult(
-            self.id, value=round(f1 * 100, 2),          # 0-100, higher is better
+            self.id, value=None if err else round(f1 * 100, 2),     # 0-100, higher is better
             raw={"correct": n_correct, "incorrect": n_incorrect, "not_attempted": n_not_attempted,
                  "is_correct": round(is_correct, 4), "accuracy_given_attempted": round(acc_given, 4),
                  "f1": round(f1, 4)},
             judge_model=jm.split("/")[-1], n_samples=n,
+            n_failed=len(errors), sample_errors=[e for _, e in errors[:3]], error=err,
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:

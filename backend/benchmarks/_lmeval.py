@@ -31,7 +31,9 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
     they pass ``gen_kwargs=None``. Returns the parsed results.json dict.
     """
     if num_concurrent is None:
-        num_concurrent = int(os.environ.get("RAIDEX_CONCURRENCY", "8"))
+        num_concurrent = int(os.environ.get("RAIDEX_LMEVAL_CONCURRENCY",
+                                            os.environ.get("RAIDEX_CONCURRENCY", "8")))
+    max_retries = int(os.environ.get("RAIDEX_LMEVAL_RETRIES", "6"))
     out_dir = os.path.join(OUT_ROOT, out_name)
     os.makedirs(out_dir, exist_ok=True)
     task_arg = ",".join(tasks) if isinstance(tasks, (list, tuple)) else tasks
@@ -40,7 +42,7 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
             "lm_eval", "--model", "local-chat-completions",
             "--model_args",
             f"model={served},base_url={base_url}/chat/completions,"
-            f"num_concurrent={num_concurrent},max_retries=3",
+            f"num_concurrent={num_concurrent},max_retries={max_retries}",
             "--apply_chat_template",
             "--tasks", task_arg,
             "--output_path", out_dir,
@@ -51,7 +53,14 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
             cmd += ["--include_path", include_path]
         if limit:
             cmd += ["--limit", str(limit)]
-        subprocess.run(cmd, check=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        if proc.returncode != 0:
+            # Surface the real lm_eval error (rate-limit, proxy death, bad param) so the
+            # runner can DLQ a meaningful reason instead of an opaque CalledProcessError.
+            tail = (proc.stderr or proc.stdout or "").strip()[-800:]
+            raise RuntimeError(
+                f"lm_eval exited {proc.returncode} for tasks={task_arg} model={model_id}: ...{tail}"
+            )
     return _load_results(out_dir)
 
 

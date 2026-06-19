@@ -1,10 +1,14 @@
-"""Shared helpers for the direct-call benchmarks (SimpleQA, StrongREJECT, XSTest).
+"""Shared helpers for the direct-call benchmarks (SimpleQA, StrongREJECT, XSTest,
+AdvGLUE, ConfAIde).
 
-Model responses and judge calls both go through litellm, so any provider works.
-The judge model is read from config.yaml (judge_models.<id>), overridable with the
-RAIDEX_JUDGE_MODEL env var. parallel_map runs per-item work concurrently (these
-benchmarks make one model call + one judge call per item, so they must not be
-serial over thousands of rows).
+Model and judge calls both go through litellm, so any provider works. ``complete``
+retries with backoff (litellm ``num_retries``) so transient rate-limits (429) and
+timeouts don't surface as failures; only a call that still fails AFTER the retries
+raises. ``map_safe`` runs per-item work concurrently and — crucially — does NOT
+swallow those post-retry failures into degenerate data: it returns them so the
+wrapper can guard (report the benchmark as errored, excluded from coverage) and the
+runner can DLQ them for targeted replay. This is the fix for the silent-degeneration
+bug where rate-limited calls were scored as wrong and folded into a fake 8/8.
 """
 from __future__ import annotations
 
@@ -16,6 +20,15 @@ import litellm
 import yaml
 
 _CONFIG = None
+
+# Retry/backoff for transient provider errors (429 / timeout). litellm performs the
+# backoff internally; a call only raises once it still fails after this many retries.
+NUM_RETRIES = int(os.environ.get("RAIDEX_NUM_RETRIES", "6"))
+TIMEOUT = float(os.environ.get("RAIDEX_TIMEOUT", "120"))
+# If more than this fraction of a benchmark's calls fail after retries, the value is
+# unreliable: the wrapper reports an error (excluded from coverage) rather than fold
+# degenerate scores into the composite.
+MAX_FAILURE_RATE = float(os.environ.get("RAIDEX_MAX_FAILURE_RATE", "0.25"))
 
 
 def _config() -> dict:
@@ -36,21 +49,72 @@ def judge_model(benchmark_id: str, default: str = "openai/gpt-4o") -> str:
 
 
 def complete(model_id: str, prompt: str, max_tokens: int = 512, temperature: float = 0.0) -> str:
-    """Single-turn litellm completion; returns the text (empty string on no content)."""
+    """Single-turn litellm completion with retry/backoff.
+
+    Returns the response text (may be empty if the model genuinely produced no
+    content). Raises only if the call still fails after ``NUM_RETRIES`` — callers
+    must let that propagate (route it through ``map_safe``), so failures are counted
+    and DLQ'd rather than silently scored as wrong.
+    """
     resp = litellm.completion(
         model=model_id,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=max_tokens,
         temperature=temperature,
+        num_retries=NUM_RETRIES,
+        timeout=TIMEOUT,
     )
     return (resp.choices[0].message.content or "").strip()
 
 
+def map_safe(fn, items, workers: int | None = None):
+    """Map ``fn`` over ``items`` concurrently, order-preserving.
+
+    ``fn`` should RAISE on a failed API call (after ``complete``'s retries) — do not
+    catch it inside ``fn``. Returns ``(out, errors)``:
+      * ``out``    — list aligned with ``items`` of ``(ok: bool, result)``; ``result``
+                     is ``None`` when ``ok`` is False.
+      * ``errors`` — list of ``(index, "ErrType: msg")`` for items whose ``fn`` raised.
+
+    A ``None`` *returned* by ``fn`` (vs raised) is a valid "answered but unparseable"
+    result and is NOT counted as a failure. Worker count defaults to
+    RAIDEX_CONCURRENCY so throttling-prone providers can be run gently.
+    """
+    if workers is None:
+        workers = int(os.environ.get("RAIDEX_CONCURRENCY", "8"))
+
+    def _wrap(ix_item):
+        ix, item = ix_item
+        try:
+            return (ix, True, fn(item), None)
+        except Exception as e:  # post-retry failure — surfaced, never swallowed
+            return (ix, False, None, f"{type(e).__name__}: {str(e)[:200]}")
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        rows = list(ex.map(_wrap, list(enumerate(items))))
+    out = [(ok, res) for _, ok, res, _ in rows]
+    errors = [(ix, err) for ix, ok, _, err in rows if not ok]
+    return out, errors
+
+
+def oks(out):
+    """Successful results from a ``map_safe`` ``out`` list (drops failed items)."""
+    return [res for ok, res in out if ok]
+
+
+def failure_error(n_failed: int, n_total: int) -> str | None:
+    """Error string if too many calls failed after retries (or none ran), else None."""
+    if n_total == 0:
+        return "no samples evaluated (0 calls)"
+    if n_failed / n_total > MAX_FAILURE_RATE:
+        return (f"{n_failed}/{n_total} API calls failed after {NUM_RETRIES} retries "
+                f"(likely rate-limited); result unreliable")
+    return None
+
+
 def parallel_map(fn, items, workers: int | None = None):
-    """Map fn over items concurrently, preserving order. Exceptions surface per item
-    as the return of fn (callers should catch inside fn and return a sentinel).
-    Worker count defaults to RAIDEX_CONCURRENCY (else 8) so throttling-prone
-    providers (SambaNova, Mistral) can be run gently."""
+    """Plain concurrent map (no failure tracking). Retained for callers that handle
+    their own error semantics; new code should prefer ``map_safe``."""
     if workers is None:
         workers = int(os.environ.get("RAIDEX_CONCURRENCY", "8"))
     with ThreadPoolExecutor(max_workers=workers) as ex:
