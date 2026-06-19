@@ -181,6 +181,21 @@ def refresh():
     return _display(LEADERBOARD)
 
 
+def refresh_all():
+    """Reload results and push fresh values to every results-driven component, so a
+    newly-evaluated model flows through everywhere — the leaderboard table, the
+    Capability-vs-RAI scatter, the Model Card + Radar dropdown choices, and the
+    pending/completed queues — on each page load and on Refresh. (The Gap heatmaps
+    are sourced reference data, not submission-driven, so they intentionally stay
+    static.) Output order must match the wired component list at the end of the app."""
+    global LEADERBOARD
+    LEADERBOARD = load_results()
+    choices = model_choices()
+    return (_display(LEADERBOARD), build_capability_vs_rai_scatter(),
+            gr.update(choices=choices), gr.update(choices=choices),
+            get_pending(), get_completed())
+
+
 def filter_leaderboard(search: str, tiers):
     df = LEADERBOARD
     if df is None or df.empty:
@@ -287,7 +302,7 @@ def build_capability_vs_rai_scatter():
     ys = [p[2] for p in pts]
     fig = go.Figure(go.Scatter(x=xs, y=ys, mode="markers+text", text=names,
                                textposition="top center", marker=dict(size=14, color="#4f46e5")))
-    sub = ""
+    rtxt = ""
     if len(pts) >= 3 and len(set(xs)) > 1:
         import numpy as np
         m, b = np.polyfit(xs, ys, 1)
@@ -296,14 +311,22 @@ def build_capability_vs_rai_scatter():
                                  line=dict(dash="dash", color="#9ca3af"), showlegend=False))
         r = float(np.corrcoef(xs, ys)[0, 1])
         if r == r:
-            sub = f"  ·  Pearson r = {r:.2f} (capability vs RAI)"
+            rtxt = f"Pearson r = {r:.2f}"
+    # Pad the x-range so edge labels (e.g. the rightmost model) aren't clipped.
+    pad = (max(xs) - min(xs)) * 0.18 or 5
+    fig.update_xaxes(range=[min(xs) - pad, max(xs) + pad])
     fig.update_layout(title="Capability vs Responsibility",
                       xaxis_title="Capability — Artificial Analysis Intelligence Index",
                       yaxis_title="RAI Score", height=520, showlegend=False,
-                      margin=dict(l=70, r=40, t=70, b=120))
-    fig.add_annotation(text=(f"Capability = AA Intelligence Index (2026-06-18 snapshot); "
-                             f"{len(pts)} of {df['Model'].nunique()} models scored{sub}"),
-                       xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
+                      margin=dict(l=70, r=50, t=70, b=92))
+    if rtxt:  # short, inside the plot — won't run off the edge
+        fig.add_annotation(text=rtxt, xref="paper", yref="paper", x=0.99, y=0.98,
+                           showarrow=False, align="right", font=dict(size=13, color="#4f46e5"),
+                           bgcolor="rgba(255,255,255,0.65)")
+    # Two-line, left-aligned caption — the old single long line ran off the plot edge.
+    fig.add_annotation(text=(f"Capability = AA Intelligence Index (2026-06-18 snapshot)<br>"
+                             f"{len(pts)} of {df['Model'].nunique()} models scored"),
+                       xref="paper", yref="paper", x=0, y=-0.15, showarrow=False,
                        font=dict(size=12, color="#666"), align="left")
     return fig
 
@@ -416,7 +439,6 @@ with gr.Blocks(title="Raidex") as app:
             gr.Markdown(BADGE_LEGEND)
             search.change(filter_leaderboard, [search, tier_filter], table)
             tier_filter.change(filter_leaderboard, [search, tier_filter], table)
-            refresh_btn.click(lambda: refresh(), None, table)
 
             gr.Markdown("## 🔥 The Gap")
             # Stacked full-width (not side-by-side) and autosizing — two 1200px figures
@@ -429,7 +451,7 @@ with gr.Blocks(title="Raidex") as app:
             with gr.Row():
                 with gr.Column():
                     gr.Markdown("### 📈 Capability vs Responsibility")
-                    gr.Plot(value=build_capability_vs_rai_scatter())
+                    cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
                 with gr.Column():
                     gr.Markdown("### Key Findings")
                     gr.Markdown(KEY_FINDINGS_MD)
@@ -466,12 +488,11 @@ with gr.Blocks(title="Raidex") as app:
                               value="A+B (8 benchmarks)", label="Evaluation tier")
             s_btn = gr.Button("Submit for evaluation", variant="primary")
             s_msg = gr.Markdown()
-            s_btn.click(submit_eval, [s_model, s_tier], s_msg)
             gr.Markdown("---")
             with gr.Accordion("⏳ Pending evaluations", open=False):
-                gr.Dataframe(value=get_pending(), interactive=False)
+                pending_tbl = gr.Dataframe(value=get_pending(), interactive=False)
             with gr.Accordion("✅ Completed evaluations", open=False):
-                gr.Dataframe(value=get_completed(), interactive=False)
+                completed_tbl = gr.Dataframe(value=get_completed(), interactive=False)
 
         with gr.Tab("📖 Methodology", id="methodology"):
             gr.Markdown(METHODOLOGY_MD)
@@ -486,7 +507,16 @@ with gr.Blocks(title="Raidex") as app:
     # Markdown links can't target Gradio tabs, so route the methodology links through tab selection.
     method_btn.click(lambda: gr.Tabs(selected="methodology"), None, tabs)
     footer_method_btn.click(lambda: gr.Tabs(selected="methodology"), None, tabs)
-    app.load(refresh, None, table)
+
+    # Results-driven refresh, wired here (after every component exists). Page load and
+    # the Refresh button repopulate the leaderboard table, the Capability-vs-RAI
+    # scatter, the Model Card + Radar dropdown choices, and the queue tables — so a
+    # newly-submitted/evaluated model shows up everywhere without a restart.
+    _refresh_outs = [table, cap_scatter, picker, r_select, pending_tbl, completed_tbl]
+    refresh_btn.click(refresh_all, None, _refresh_outs)
+    s_btn.click(submit_eval, [s_model, s_tier], s_msg).then(
+        lambda: (get_pending(), get_completed()), None, [pending_tbl, completed_tbl])
+    app.load(refresh_all, None, _refresh_outs)
 
 
 if __name__ == "__main__":
