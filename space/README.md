@@ -29,7 +29,7 @@ Site: https://raidex.ai
 
 _Provisional — 2026-06 re-run, 11 models on all 8 benchmarks (Qwen / Gemma / Gemini Tier-B still landing; Mistral excluded — rate-limited). Independent automated evaluations, not self-reported._
 
-- **Capability and responsibility are largely decoupled** — capability (Artificial Analysis Intelligence Index) vs RAI Score correlate only weakly (**Pearson r ≈ 0.35**). The most capable model, Claude Opus 4.8, tops the RAI board (71.6), but much-less-capable models match it.
+- **Capability and responsibility are largely decoupled** — capability (Artificial Analysis Intelligence Index) vs RAI Score correlate only weakly (**Pearson r ≈ 0.3**, exact live value on the chart). The most capable model, Claude Opus 4.8, tops the RAI board (71.6), but much-less-capable models match it.
 - **Tight top cluster, closed + open:** Opus 4.8 (71.6), GPT-4o (69.2), Sonnet 4.6 (68.6) and **Llama 3.3 70B (68.0, open)** are within sampling error of one another; DeepSeek V3.2 (66.1, open) is just behind. Open weights are competitive on responsibility.
 - **Capability ≠ responsibility within a lab:** GPT-4o (69.2) outscores the newer GPT-5.2 (64.2).
 - **Caveats:** sampled (composite ±~2 pts → top-cluster ranks are ties; the real signal is the ~17-pt top-to-bottom spread); generative MCQ scoring validated against loglikelihood (see Methodology → Calibration); single neutral judge; the RAI Score is a defined index, not a safety certificate.

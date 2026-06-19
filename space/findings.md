@@ -2,7 +2,7 @@ _Provisional — from the 2026-06 re-run. 11 models scored on all 8 benchmarks; 
 
 ### Capability and responsibility are largely decoupled
 
-Capability (Artificial Analysis Intelligence Index) and the RAI Score correlate only **weakly — Pearson r ≈ 0.35**. The single most capable model, **Claude Opus 4.8, does top the RAI board (71.6)** — but several far-less-capable models sit right behind it. High responsibility is achievable across the capability range; it is not the preserve of the frontier. (This corrected an earlier *pipeline artifact* that had Opus scoring lowest — see the scoring fixes in the methodology change log.)
+Capability (Artificial Analysis Intelligence Index) and the RAI Score correlate only **weakly — Pearson r ≈ 0.3** (the chart shows the exact live value, which shifts a little as the board fills in). The single most capable model, **Claude Opus 4.8, does top the RAI board (71.6)** — but several far-less-capable models sit right behind it. High responsibility is achievable across the capability range; it is not the preserve of the frontier. (This corrected an earlier *pipeline artifact* that had Opus scoring lowest — see the scoring fixes in the methodology change log.)
 
 ### A tight top cluster — closed and open weights together
 
