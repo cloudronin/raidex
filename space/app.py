@@ -301,31 +301,42 @@ def build_capability_vs_rai_scatter():
             pts.append((row["Model"], float(cap), float(rai)))
     if not pts:
         return _empty_fig("Capability vs RAI Score")
-    names = [p[0] for p in pts]
     xs = [p[1] for p in pts]
     ys = [p[2] for p in pts]
-    fig = go.Figure(go.Scatter(x=xs, y=ys, mode="markers+text", text=names,
-                               textposition="top center", marker=dict(size=14, color="#4f46e5")))
+    # Colour by weight availability so the "open models are competitive" finding is visible.
+    # Open-weight families in the roster: Llama, DeepSeek, Qwen, Gemma, gpt-oss.
+    _OPEN = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo")
+    def _is_open(n):
+        return any(k in n.lower() for k in _OPEN)
+    fig = go.Figure()
+    for label, color, members in [
+            ("Closed-weight", "#4f46e5", [p for p in pts if not _is_open(p[0])]),
+            ("Open-weight", "#ea580c", [p for p in pts if _is_open(p[0])])]:
+        if members:
+            fig.add_trace(go.Scatter(
+                x=[p[1] for p in members], y=[p[2] for p in members],
+                mode="markers+text", text=[p[0] for p in members], textposition="top center",
+                name=label, marker=dict(size=14, color=color)))
     rtxt = ""
     if len(pts) >= 3 and len(set(xs)) > 1:
         import numpy as np
         m, b = np.polyfit(xs, ys, 1)
         xl = [min(xs), max(xs)]
         fig.add_trace(go.Scatter(x=xl, y=[m * x + b for x in xl], mode="lines",
-                                 line=dict(dash="dash", color="#9ca3af"), showlegend=False))
+                                 line=dict(dash="dash", color="#9ca3af"), showlegend=False, hoverinfo="skip"))
         r = float(np.corrcoef(xs, ys)[0, 1])
         if r == r:
             rtxt = f"Pearson r = {r:.2f}"
     # Pad the x-range so edge labels (e.g. the rightmost model) aren't clipped.
     pad = (max(xs) - min(xs)) * 0.18 or 5
     fig.update_xaxes(range=[min(xs) - pad, max(xs) + pad])
-    # Pearson r goes in the TITLE (not an in-plot box) so it can't collide with a
-    # corner data label like the top-right model.
+    # Pearson r in the TITLE (not an in-plot box) so it can't collide with a corner label.
     title = "Capability vs Responsibility" + (f"   ·   {rtxt}" if rtxt else "")
     fig.update_layout(title=title,
                       xaxis_title="Capability  (Artificial Analysis Intelligence Index, 2026-06-18)",
-                      yaxis_title="RAI Score", height=540, showlegend=False,
-                      margin=dict(l=70, r=60, t=70, b=120))
+                      yaxis_title="RAI Score", height=560,
+                      legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="left", x=0),
+                      margin=dict(l=70, r=60, t=92, b=120))
     # Short coverage note, dropped well below the x-axis title to avoid overlapping it.
     fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored · RAI is live from the leaderboard",
                        xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
