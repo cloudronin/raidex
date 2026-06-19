@@ -222,7 +222,7 @@ def model_choices():
 GREEN = [[0.0, "#0b3d2e"], [1.0, "#16a34a"]]
 RED = [[0.0, "#3d0b0b"], [1.0, "#dc2626"]]
 _LAYOUT = dict(autosize=True, height=560, paper_bgcolor="white", plot_bgcolor="white",
-               font=dict(size=15), margin=dict(l=160, r=40, t=80, b=120))
+               font=dict(size=15), margin=dict(l=160, r=150, t=80, b=120))
 
 
 def _empty_fig(title: str):
@@ -240,7 +240,9 @@ def build_capability_heatmap():
         return _empty_fig("Capability benchmarks")
     z = [CAP["models"][m].get("capability", []) for m in models]
     fig = go.Figure(go.Heatmap(z=z, x=benches, y=models, colorscale=GREEN,
-                               showscale=False, xgap=3, ygap=3, zmin=0, zmax=1))
+                               showscale=True, xgap=3, ygap=3, zmin=0, zmax=1,
+                               colorbar=dict(tickvals=[0, 1], ticktext=["not reported", "reported"],
+                                             len=0.55, thickness=16, outlinewidth=0, ticks="")))
     fig.update_layout(title="<b>Capability benchmarks: widely self-reported</b>", **_LAYOUT)
     fig.update_xaxes(tickangle=-40)
     return fig
@@ -255,7 +257,9 @@ def build_rai_heatmap():
         return _empty_fig("RAI benchmarks")
     z = [CAP["models"][m].get("rai", []) for m in models]
     fig = go.Figure(go.Heatmap(z=z, x=benches, y=models, colorscale=RED,
-                               showscale=False, xgap=3, ygap=3, zmin=0, zmax=1))
+                               showscale=True, xgap=3, ygap=3, zmin=0, zmax=1,
+                               colorbar=dict(tickvals=[0, 1], ticktext=["not reported", "reported"],
+                                             len=0.55, thickness=16, outlinewidth=0, ticks="")))
     fig.update_layout(title="<b>RAI benchmarks: rarely self-reported</b>", **_LAYOUT)
     fig.update_xaxes(tickangle=-40)
     return fig
