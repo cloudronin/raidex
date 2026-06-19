@@ -87,7 +87,7 @@ class AdvGLUE(Benchmark):
             pred = _classify(_direct.complete(model_id, pf(row), max_tokens=512), lm)
             return (cfg, 1 if (pred is not None and pred == int(row["label"])) else 0)
 
-        out, errors = _direct.map_safe(judge, items)
+        out, errors = _direct.map_safe(judge, items, label="advglue")
         res = _direct.oks(out)
         err = _direct.failure_error(len(errors), len(items))
         total = len(res)

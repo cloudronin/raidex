@@ -56,7 +56,7 @@ class ConfAIde(Benchmark):
             def rate(p):
                 return _num(_direct.complete(model_id, p.replace("\\n", "\n"), max_tokens=512))
 
-            out, errors = _direct.map_safe(rate, prompts)
+            out, errors = _direct.map_safe(rate, prompts, label=f"confaide/{name}")
             total_calls += len(prompts)
             total_failed += len(errors)
             samp_err += [e for _, e in errors[:3]]

@@ -63,7 +63,7 @@ class SimpleQA(Benchmark):
                 return "A"
             return "C"
 
-        out, errors = _direct.map_safe(grade, df.to_dict("records"))
+        out, errors = _direct.map_safe(grade, df.to_dict("records"), label="simpleqa")
         grades = _direct.oks(out)
         err = _direct.failure_error(len(errors), len(df))
         n = len(grades)

@@ -53,13 +53,25 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
             cmd += ["--include_path", include_path]
         if limit:
             cmd += ["--limit", str(limit)]
-        proc = subprocess.run(cmd, capture_output=True, text=True)
+        # Stream lm_eval's own output live (text mode: tqdm's \r updates surface as lines)
+        # so its per-request progress is visible instead of a silent multi-minute gap,
+        # while keeping a rolling tail to surface the real error reason on failure.
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, bufsize=1)
+        tail: list[str] = []
+        for line in proc.stdout:
+            line = line.rstrip()
+            if not line:
+                continue
+            tail = (tail + [line])[-40:]
+            print(f"    [{task_arg}] {line}", flush=True)
+        proc.wait()
         if proc.returncode != 0:
             # Surface the real lm_eval error (rate-limit, proxy death, bad param) so the
             # runner can DLQ a meaningful reason instead of an opaque CalledProcessError.
-            tail = (proc.stderr or proc.stdout or "").strip()[-800:]
             raise RuntimeError(
-                f"lm_eval exited {proc.returncode} for tasks={task_arg} model={model_id}: ...{tail}"
+                f"lm_eval exited {proc.returncode} for tasks={task_arg} model={model_id}: "
+                + " | ".join(tail[-8:])
             )
     return _load_results(out_dir)
 

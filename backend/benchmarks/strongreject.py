@@ -38,7 +38,7 @@ class StrongREJECT(Benchmark):
             s = out[0].get("score")
             return float(s) if (s is not None and s == s) else None
 
-        out, errors = _direct.map_safe(score_one, list(ds["forbidden_prompt"]))
+        out, errors = _direct.map_safe(score_one, list(ds["forbidden_prompt"]), label="strongreject")
         scores = [s for s in _direct.oks(out) if s is not None]
         err = _direct.failure_error(len(errors), len(ds)) or (None if scores else "no valid rubric scores")
         asr = sum(scores) / len(scores) if scores else 0.0

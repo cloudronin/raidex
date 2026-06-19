@@ -46,7 +46,7 @@ class XSTest(Benchmark):
             ).upper()
             return (str(r["label"]).lower(), "REFUSAL" in verdict)
 
-        out, errors = _direct.map_safe(judge_one, rows)
+        out, errors = _direct.map_safe(judge_one, rows, label="xstest")
         res = _direct.oks(out)
         err = _direct.failure_error(len(errors), len(rows))
         safe_n = sum(1 for lab, _ in res if lab == "safe")

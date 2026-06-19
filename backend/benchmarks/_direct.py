@@ -13,7 +13,7 @@ bug where rate-limited calls were scored as wrong and folded into a fake 8/8.
 from __future__ import annotations
 
 import os
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import litellm
@@ -38,6 +38,9 @@ litellm.request_timeout = TIMEOUT
 # unreliable: the wrapper reports an error (excluded from coverage) rather than fold
 # degenerate scores into the composite.
 MAX_FAILURE_RATE = float(os.environ.get("RAIDEX_MAX_FAILURE_RATE", "0.25"))
+# Emit a per-request progress counter ("<bench>: done/total") every N completions, so a
+# slow/hung benchmark is visible instead of silent. Set RAIDEX_PROGRESS_EVERY=0 to mute.
+PROGRESS_EVERY = int(os.environ.get("RAIDEX_PROGRESS_EVERY", "25"))
 
 
 def _config() -> dict:
@@ -76,7 +79,7 @@ def complete(model_id: str, prompt: str, max_tokens: int = 512, temperature: flo
     return (resp.choices[0].message.content or "").strip()
 
 
-def map_safe(fn, items, workers: int | None = None):
+def map_safe(fn, items, workers: int | None = None, label: str | None = None):
     """Map ``fn`` over ``items`` concurrently, order-preserving.
 
     ``fn`` should RAISE on a failed API call (after ``complete``'s retries) — do not
@@ -87,22 +90,38 @@ def map_safe(fn, items, workers: int | None = None):
 
     A ``None`` *returned* by ``fn`` (vs raised) is a valid "answered but unparseable"
     result and is NOT counted as a failure. Worker count defaults to
-    RAIDEX_CONCURRENCY so throttling-prone providers can be run gently.
+    RAIDEX_CONCURRENCY so throttling-prone providers can be run gently. If ``label`` is
+    set, prints a live "label: done/total (n failed)" counter as requests complete.
     """
     if workers is None:
         workers = int(os.environ.get("RAIDEX_CONCURRENCY", "8"))
+    items = list(items)
+    total = len(items)
 
-    def _wrap(ix_item):
-        ix, item = ix_item
+    def _wrap(ix, item):
         try:
             return (ix, True, fn(item), None)
         except Exception as e:  # post-retry failure — surfaced, never swallowed
             return (ix, False, None, f"{type(e).__name__}: {str(e)[:200]}")
 
+    results: list = [None] * total
+    oks_: list = [False] * total
+    errors: list = []
+    done = 0
+    # submit + as_completed (not ex.map) so we can count each request as it lands.
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        rows = list(ex.map(_wrap, list(enumerate(items))))
-    out = [(ok, res) for _, ok, res, _ in rows]
-    errors = [(ix, err) for ix, ok, _, err in rows if not ok]
+        futs = [ex.submit(_wrap, ix, it) for ix, it in enumerate(items)]
+        for fut in as_completed(futs):
+            ix, ok, res, err = fut.result()
+            results[ix] = res
+            oks_[ix] = ok
+            if not ok:
+                errors.append((ix, err))
+            done += 1
+            if label and PROGRESS_EVERY and total and (done % PROGRESS_EVERY == 0 or done == total):
+                nf = len(errors)
+                print(f"  · {label}: {done}/{total}" + (f"  ({nf} failed)" if nf else ""), flush=True)
+    out = [(oks_[i], results[i]) for i in range(total)]
     return out, errors
 
 
