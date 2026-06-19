@@ -27,6 +27,12 @@ FULL = [
     # Skipped; revisit with a higher-tier Mistral key.
     "huggingface/Qwen/Qwen3-235B-A22B-Instruct-2507",
     "huggingface/google/gemma-3-27b-it",
+    # Roster-widening batch (open weights w/ on-scale AA capability — enriches the
+    # capability-vs-RAI scatter; all conc-1 throttled below). SambaNova-served:
+    "sambanova/DeepSeek-V3.1",
+    "sambanova/MiniMax-M2.7",
+    "sambanova/gemma-4-31B-it",
+    "huggingface/microsoft/phi-4",                     # low-capability anchor (AA ~4.9)
 ]
 # Gemini only needs the two truncated Tier B benchmarks re-run + merged.
 GEMINI = "gemini/gemini-2.5-flash"

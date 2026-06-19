@@ -305,7 +305,8 @@ def build_capability_vs_rai_scatter():
     ys = [p[2] for p in pts]
     # Colour by weight availability so the "open models are competitive" finding is visible.
     # Open-weight families in the roster: Llama, DeepSeek, Qwen, Gemma, gpt-oss.
-    _OPEN = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo")
+    _OPEN = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo",
+             "minimax", "phi")
     def _is_open(n):
         return any(k in n.lower() for k in _OPEN)
     fig = go.Figure()
