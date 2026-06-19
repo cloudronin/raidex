@@ -315,19 +315,17 @@ def build_capability_vs_rai_scatter():
     # Pad the x-range so edge labels (e.g. the rightmost model) aren't clipped.
     pad = (max(xs) - min(xs)) * 0.18 or 5
     fig.update_xaxes(range=[min(xs) - pad, max(xs) + pad])
-    fig.update_layout(title="Capability vs Responsibility",
-                      xaxis_title="Capability — Artificial Analysis Intelligence Index",
-                      yaxis_title="RAI Score", height=520, showlegend=False,
-                      margin=dict(l=70, r=50, t=70, b=92))
-    if rtxt:  # short, inside the plot — won't run off the edge
-        fig.add_annotation(text=rtxt, xref="paper", yref="paper", x=0.99, y=0.98,
-                           showarrow=False, align="right", font=dict(size=13, color="#4f46e5"),
-                           bgcolor="rgba(255,255,255,0.65)")
-    # Two-line, left-aligned caption — the old single long line ran off the plot edge.
-    fig.add_annotation(text=(f"Capability = AA Intelligence Index (2026-06-18 snapshot)<br>"
-                             f"{len(pts)} of {df['Model'].nunique()} models scored"),
-                       xref="paper", yref="paper", x=0, y=-0.15, showarrow=False,
-                       font=dict(size=12, color="#666"), align="left")
+    # Pearson r goes in the TITLE (not an in-plot box) so it can't collide with a
+    # corner data label like the top-right model.
+    title = "Capability vs Responsibility" + (f"   ·   {rtxt}" if rtxt else "")
+    fig.update_layout(title=title,
+                      xaxis_title="Capability  (Artificial Analysis Intelligence Index, 2026-06-18)",
+                      yaxis_title="RAI Score", height=540, showlegend=False,
+                      margin=dict(l=70, r=60, t=70, b=120))
+    # Short coverage note, dropped well below the x-axis title to avoid overlapping it.
+    fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored · RAI is live from the leaderboard",
+                       xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
+                       font=dict(size=11, color="#888"), align="left")
     return fig
 
 
@@ -430,6 +428,11 @@ with gr.Blocks(title="Raidex") as app:
     with gr.Tabs() as tabs:
         # ---- Main page: leaderboard + the gap + coverage, all in one ----
         with gr.Tab("🏆 Leaderboard", id="leaderboard"):
+            gr.Markdown("## 🏆 Leaderboard")
+            gr.Markdown("Frontier models ranked by **RAI Score** — the unweighted mean of their normalized "
+                        "scores across 8 open Responsible-AI benchmarks (0–100). Every number here is from "
+                        "Raidex's own automated runs, not self-reported. Search by name or filter by tier; "
+                        "the badge shows how many of the 8 benchmarks were run.")
             with gr.Row():
                 search = gr.Textbox(placeholder="Search models...", show_label=False, scale=3)
                 tier_filter = gr.CheckboxGroup(["Tier A", "Tier B", "Tier C"], value=["Tier A", "Tier B"],
@@ -441,22 +444,29 @@ with gr.Blocks(title="Raidex") as app:
             tier_filter.change(filter_leaderboard, [search, tier_filter], table)
 
             gr.Markdown("## 🔥 The Gap")
-            # Stacked full-width (not side-by-side) and autosizing — two 1200px figures
-            # in one Row overflowed and got clipped.
+            gr.Markdown("Why Raidex exists. Frontier developers report **capability** benchmarks almost "
+                        "universally (top, green) but **Responsible-AI** benchmarks rarely (bottom, red). "
+                        "Each row is a flagship model; each cell marks whether that developer publicly reports "
+                        "that benchmark — the sparse red grid is the reporting gap Raidex fills.")
             gr.Plot(value=build_capability_heatmap())
             gr.Plot(value=build_rai_heatmap())
             gr.Markdown("*Frontier developers report capability benchmarks consistently. "
                         "RAI benchmarks? Rarely — Raidex runs all 8 anyway.*")
 
-            with gr.Row():
-                with gr.Column():
-                    gr.Markdown("### 📈 Capability vs Responsibility")
-                    cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
-                with gr.Column():
-                    gr.Markdown("### Key Findings")
-                    gr.Markdown(KEY_FINDINGS_MD)
+            # Own full-width row (was sharing a Row with Key Findings, which cramped the labels).
+            gr.Markdown("## 📈 Capability vs Responsibility")
+            gr.Markdown("Does more capable mean more responsible? Each model's capability (Artificial Analysis "
+                        "Intelligence Index, x-axis) plotted against its Raidex RAI Score (y-axis), with a trend "
+                        "line and Pearson *r*. A weak/flat slope means the two are largely independent — high RAI "
+                        "isn't reserved for the most capable models.")
+            cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
 
-            gr.Markdown("### Methodology")
+            gr.Markdown("## 🔑 Key Findings")
+            gr.Markdown("The headline results from the latest evaluation run.")
+            gr.Markdown(KEY_FINDINGS_MD)
+
+            gr.Markdown("## 📖 Methodology")
+            gr.Markdown("How to read these scores.")
             gr.Markdown("The RAI Score is a defined index — an unweighted mean of normalized open-benchmark "
                         "scores across safety, fairness, factuality, security, machine ethics, robustness, "
                         "and privacy. Scores are generative/judge-based and sampled; read them within Raidex, "
