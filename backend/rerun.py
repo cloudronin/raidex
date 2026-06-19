@@ -22,7 +22,9 @@ FULL = [
     "sambanova/DeepSeek-V3.2",                         # throttled tail (conc 1) below
     "sambanova/Meta-Llama-3.3-70B-Instruct",
     "sambanova/gpt-oss-120b",
-    "mistral/mistral-large-latest",
+    # mistral/mistral-large-latest — un-evaluable on our account's rate limit: even at
+    # conc 1 the direct calls 429 out (~70% fail) and the lm-eval proxy crashes (-11).
+    # Skipped; revisit with a higher-tier Mistral key.
     "huggingface/Qwen/Qwen3-235B-A22B-Instruct-2507",
     "huggingface/google/gemma-3-27b-it",
 ]
