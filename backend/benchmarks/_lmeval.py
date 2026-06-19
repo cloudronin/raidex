@@ -13,6 +13,7 @@ import os
 import subprocess
 from typing import Optional
 
+from ._direct import REJECTS_TEMP0
 from ._proxy import litellm_proxy
 
 OUT_ROOT = os.environ.get("RAIDEX_OUT_ROOT", "/tmp/raidex")
@@ -34,6 +35,11 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
         num_concurrent = int(os.environ.get("RAIDEX_LMEVAL_CONCURRENCY",
                                             os.environ.get("RAIDEX_CONCURRENCY", "8")))
     max_retries = int(os.environ.get("RAIDEX_LMEVAL_RETRIES", "6"))
+    # Models that reject temperature=0 (gpt-5.5, reasoning-locked): force temperature=1,
+    # else lm-eval's default greedy temperature=0 makes every proxied request 400 and
+    # collapses the backend's aiohttp session ("Session is closed" → lm_eval exits 1).
+    if model_id in REJECTS_TEMP0:
+        gen_kwargs = f"{gen_kwargs},temperature=1" if gen_kwargs else "temperature=1"
     out_dir = os.path.join(OUT_ROOT, out_name)
     os.makedirs(out_dir, exist_ok=True)
     task_arg = ",".join(tasks) if isinstance(tasks, (list, tuple)) else tasks

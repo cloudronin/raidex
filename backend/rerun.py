@@ -18,6 +18,7 @@ import runner
 # Full Tier A+B re-runs (artifacts, lm-eval errors, missing Tier B, never-ran).
 FULL = [
     "anthropic/claude-opus-4-8",                       # headline — run first
+    "openai/gpt-5.5",                                  # newest flagship; temp-0 fix (reasoning-locked)
     "xai/grok-4.3",                                    # fast (conc 8), reliable
     "sambanova/DeepSeek-V3.2",                         # throttled tail (conc 1) below
     "sambanova/Meta-Llama-3.3-70B-Instruct",

@@ -24,6 +24,16 @@ import yaml
 # (only temperature=1 allowed); without this, every direct call to them errors out.
 litellm.drop_params = True
 
+# Models whose API rejects temperature=0 (only the default value, 1, is allowed) — e.g.
+# GPT-5.5, which shipped reasoning-locked. drop_params can't help here: temperature is a
+# *supported* param and only the *value* 0 is rejected, but drop_params strips unsupported
+# param *names*, not values. So we omit temperature for these models instead. This is a
+# known seed; complete() also discovers new ones reactively, and the lm-eval path reads
+# this set to force temperature=1. (gpt-5.2 and earlier accept temperature=0 fine — this
+# is 5.5-specific, hence a known-set + reactive catch, not a "gpt-5*" name heuristic.)
+REJECTS_TEMP0 = {"openai/gpt-5.5"}
+_NO_TEMP0 = set(REJECTS_TEMP0)
+
 _CONFIG = None
 
 # Retry/backoff for transient provider errors (429 / timeout). litellm performs the
@@ -68,14 +78,27 @@ def complete(model_id: str, prompt: str, max_tokens: int = 512, temperature: flo
     must let that propagate (route it through ``map_safe``), so failures are counted
     and DLQ'd rather than silently scored as wrong.
     """
-    resp = litellm.completion(
+    kwargs = dict(
         model=model_id,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=max_tokens,
-        temperature=temperature,
         num_retries=NUM_RETRIES,
         timeout=TIMEOUT,
     )
+    if model_id not in _NO_TEMP0:
+        kwargs["temperature"] = temperature
+    try:
+        resp = litellm.completion(**kwargs)
+    except litellm.BadRequestError as e:
+        # A model that rejects temperature=0 (only the default, 1, allowed — e.g. gpt-5.5).
+        # drop_params can't strip a disallowed *value*, so retry without temperature and
+        # remember the model so later calls skip it directly (no repeated double-call).
+        if "temperature" in kwargs and "temperature" in str(e).lower():
+            _NO_TEMP0.add(model_id)
+            kwargs.pop("temperature", None)
+            resp = litellm.completion(**kwargs)
+        else:
+            raise
     return (resp.choices[0].message.content or "").strip()
 
 

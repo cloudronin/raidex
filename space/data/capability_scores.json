@@ -5,6 +5,7 @@
   "_note": "Single-number capability aggregate (a normalized mean of capability benchmarks — built the same way as Raidex's RAI Score). Keyed by Raidex model_name (the leaderboard 'Model' column). Models without a published score on this snapshot's index version are omitted rather than mixed across versions: claude-haiku-4-5, mistral-large-latest, Qwen3-235B-A22B-Instruct-2507. Meta-Llama-3.3-70B-Instruct added from the artificialanalysis.ai model page (AA index ~14, v4.0 — consistent with this snapshot's gpt-4o~11 scale). Roster-widening open-weight batch (MiniMax-M2.7, gemma-4-31B-it, DeepSeek-V3.1, phi-4) read off the same benchlm snapshot to enrich the capability-vs-RAI scatter.",
   "scores": {
     "claude-opus-4-8": 55.7,
+    "gpt-5.5": 54.8,
     "gpt-5.2": 42.2,
     "grok-4.3": 37.6,
     "claude-sonnet-4-6": 35.9,
