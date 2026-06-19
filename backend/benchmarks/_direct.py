@@ -30,6 +30,10 @@ _CONFIG = None
 # backoff internally; a call only raises once it still fails after this many retries.
 NUM_RETRIES = int(os.environ.get("RAIDEX_NUM_RETRIES", "6"))
 TIMEOUT = float(os.environ.get("RAIDEX_TIMEOUT", "120"))
+# Global litellm timeout so EVERY in-process litellm call fails fast instead of hanging
+# on a stalled connection — including library calls we don't wrap (e.g. strong_reject's
+# own rubric-judge call, which has no timeout and dead-locked a run for 15 min).
+litellm.request_timeout = TIMEOUT
 # If more than this fraction of a benchmark's calls fail after retries, the value is
 # unreliable: the wrapper reports an error (excluded from coverage) rather than fold
 # degenerate scores into the composite.
