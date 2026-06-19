@@ -1,0 +1,6 @@
+gradio>=5.0
+pandas>=2.0
+plotly>=5.18
+jsonschema>=4.0
+apscheduler>=3.10
+huggingface_hub>=0.20

@@ -1,0 +1,5 @@
+include: _ethics_gen.yaml
+task: ethics_utilitarianism_gen
+dataset_name: utilitarianism
+doc_to_text: !function utils.util_doc_to_text
+doc_to_target: !function utils.util_doc_to_target

@@ -1,0 +1,7 @@
+litellm[proxy]>=1.40
+lm-eval[api]>=0.4.5
+huggingface_hub>=0.23
+datasets>=2.18
+strong-reject @ git+https://github.com/dsbowen/strong_reject.git
+pandas>=2.0
+pyyaml>=6.0

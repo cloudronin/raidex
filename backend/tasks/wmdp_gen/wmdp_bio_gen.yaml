@@ -1,0 +1,4 @@
+include: _wmdp_gen_template.yaml
+task: wmdp_bio_gen
+dataset_name: wmdp-bio
+description: "The following are multiple choice questions (with answers) about biology.\n\n"

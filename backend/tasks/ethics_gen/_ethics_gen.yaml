@@ -1,0 +1,29 @@
+# Generative ETHICS template (chat-API compatible). Canonical hendrycks_ethics
+# tasks are multiple_choice/loglikelihood. We prompt for a single-word judgment
+# and extract it. Per-subtask configs include this file and set the prompt/target.
+dataset_path: lighteval/hendrycks_ethics   # parquet mirror; EleutherAI/* is a script (unsupported on datasets>=4)
+training_split: train
+test_split: test
+num_fewshot: 0
+output_type: generate_until
+filter_list:
+  - name: "flexible-extract"
+    filter:
+      - function: "regex"
+        # "unreasonable" listed before "reasonable" so the longer word wins.
+        regex_pattern: "(?i)\\b(unreasonable|reasonable|yes|no)\\b"
+        group_select: -1
+      - function: "take_first"
+generation_kwargs:
+  until: []          # empty stop list is Anthropic-safe
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 64
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+metadata:
+  version: 1

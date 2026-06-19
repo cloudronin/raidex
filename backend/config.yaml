@@ -1,0 +1,33 @@
+budget:
+  per_model_limit_usd: 100
+  monthly_limit_usd: 500
+
+# litellm reads provider API keys from environment variables automatically
+# (OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, XAI_API_KEY, DEEPSEEK_API_KEY, ...)
+
+judge_models:
+  # Neutral-ish default: Claude Sonnet judges reliably at small max_tokens (Gemini's
+  # thinking returns empty there; gpt-4o self-prefers 3 OpenAI rows). Self-preference here
+  # applies only to the 3 Anthropic rows. Override per-run with RAIDEX_JUDGE_MODEL.
+  simpleqa: "anthropic/claude-sonnet-4-6"
+  xstest: "anthropic/claude-sonnet-4-6"
+  strongreject:
+    default: "strongreject_rubric"       # no-GPU LLM rubric judge (uses OPENAI_API_KEY)
+    finetuned: "strongreject_finetuned"  # opt-in: Gemma 2B, needs GPU + HF_TOKEN
+
+lm_eval:
+  model_backend: "local-chat-completions"   # chat APIs cannot do loglikelihood MCQ
+  apply_chat_template: true
+  num_concurrent: 8
+  proxy_port: 8000
+  tasks:
+    bbq: "bbq"
+    wmdp: "wmdp"
+    ethics: "hendrycks_ethics"             # NOT "ethics" — verify ids with `lm_eval --tasks list`
+
+datasets:
+  simpleqa_csv: "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
+  xstest_hf: "walledai/XSTest"
+
+defaults:
+  smoke_limit: 50

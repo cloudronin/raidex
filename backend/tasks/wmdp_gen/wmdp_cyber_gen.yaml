@@ -1,0 +1,4 @@
+include: _wmdp_gen_template.yaml
+task: wmdp_cyber_gen
+dataset_name: wmdp-cyber
+description: "The following are multiple choice questions (with answers) about computer security.\n\n"

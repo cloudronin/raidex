@@ -1,0 +1,4 @@
+include: _wmdp_gen_template.yaml
+task: wmdp_chem_gen
+dataset_name: wmdp-chem
+description: "The following are multiple choice questions (with answers) about chemistry.\n\n"
