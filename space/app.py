@@ -68,6 +68,7 @@ def _read_text(path: Path, fallback: str = "") -> str:
 
 CAP = json.loads(_read_text(HERE / "data" / "capability_benchmarks.json",
                             '{"benchmarks": [], "models": {}}'))
+CAP_SCORES = json.loads(_read_text(HERE / "data" / "capability_scores.json", "{}")).get("scores", {})
 KEY_FINDINGS_MD = _read_text(HERE / "findings.md", "_Key findings will appear here after evaluation runs._")
 METHODOLOGY_MD = _read_text(HERE / "METHODOLOGY.md", "METHODOLOGY.md not found.")
 
@@ -264,16 +265,46 @@ def build_radar(models):
     return fig
 
 
-def build_coverage_scatter():
+def build_capability_vs_rai_scatter():
+    """Capability (Artificial Analysis Intelligence Index) vs RAI Score — the core
+    'does capability predict responsibility?' view. Replaces the coverage scatter,
+    which goes flat once every model reaches 8/8. Capability is sourced + static
+    (data/capability_scores.json); RAI reads live from the leaderboard, so the plot
+    self-updates as runs land."""
     df = LEADERBOARD
-    if df is None or df.empty:
-        return _empty_fig("Coverage vs RAI Score")
-    cov = df["Coverage"].apply(lambda c: int(str(c).split("/")[0]) if c else 0)
-    fig = go.Figure(go.Scatter(x=cov, y=df["RAI Score"], mode="markers+text",
-                               text=df["Model"], textposition="top center",
-                               marker=dict(size=14)))
-    fig.update_layout(title="Coverage vs RAI Score", xaxis_title="Benchmarks evaluated (/8)",
-                      yaxis_title="RAI Score", height=520)
+    if df is None or df.empty or not CAP_SCORES:
+        return _empty_fig("Capability vs RAI Score")
+    pts = []
+    for _, row in df.iterrows():
+        cap = CAP_SCORES.get(row["Model"])
+        rai = row.get("RAI Score")
+        if cap is not None and rai is not None and not pd.isna(rai):
+            pts.append((row["Model"], float(cap), float(rai)))
+    if not pts:
+        return _empty_fig("Capability vs RAI Score")
+    names = [p[0] for p in pts]
+    xs = [p[1] for p in pts]
+    ys = [p[2] for p in pts]
+    fig = go.Figure(go.Scatter(x=xs, y=ys, mode="markers+text", text=names,
+                               textposition="top center", marker=dict(size=14, color="#4f46e5")))
+    sub = ""
+    if len(pts) >= 3 and len(set(xs)) > 1:
+        import numpy as np
+        m, b = np.polyfit(xs, ys, 1)
+        xl = [min(xs), max(xs)]
+        fig.add_trace(go.Scatter(x=xl, y=[m * x + b for x in xl], mode="lines",
+                                 line=dict(dash="dash", color="#9ca3af"), showlegend=False))
+        r = float(np.corrcoef(xs, ys)[0, 1])
+        if r == r:
+            sub = f"  ·  Pearson r = {r:.2f} (capability vs RAI)"
+    fig.update_layout(title="Capability vs Responsibility",
+                      xaxis_title="Capability — Artificial Analysis Intelligence Index",
+                      yaxis_title="RAI Score", height=520, showlegend=False,
+                      margin=dict(l=70, r=40, t=70, b=120))
+    fig.add_annotation(text=(f"Capability = AA Intelligence Index (2026-06-18 snapshot); "
+                             f"{len(pts)} of {df['Model'].nunique()} models scored{sub}"),
+                       xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
+                       font=dict(size=12, color="#666"), align="left")
     return fig
 
 
@@ -397,8 +428,8 @@ with gr.Blocks(title="Raidex") as app:
 
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown("### 📊 Coverage vs RAI Score")
-                    gr.Plot(value=build_coverage_scatter())
+                    gr.Markdown("### 📈 Capability vs Responsibility")
+                    gr.Plot(value=build_capability_vs_rai_scatter())
                 with gr.Column():
                     gr.Markdown("### Key Findings")
                     gr.Markdown(KEY_FINDINGS_MD)
