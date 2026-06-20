@@ -65,6 +65,7 @@ The index is intended to evolve. Constituents are added or removed under the fol
 ### Change log
 
 - 2026-06: Calibrated generative vs loglikelihood scoring (BBQ, WMDP) on local open-weight models — agreement within ~3–6 points, with the gap shrinking as model capability rises (a format-following effect, not a method flaw). See Evaluation methodology → Calibration.
+- 2026-06: Re-enabled GPT-5.5 with a reasoning-lock fix (force `temperature=1`, raise the generation token budget) and scored it **8/8**. WMDP needed a robust direct-call harness — lm-eval's async client crashes on the ~6% of bio items GPT-5.5's safety filter rejects — and the proper measurement shows GPT-5.5 carries the board's **highest hazardous-knowledge score**. MCQ scores are sampled (temp=1), a footnote. See Evaluation methodology → Reasoning-locked models.
 - 2026-06: Added Tier B — ConfAIde (privacy) and AdvGLUE (robustness) — covering the two previously-unrepresented dimensions, in place of the GPU-bound HarmBench/DecodingTrust originally held for Tier B; both are API-only and judge/extraction-scored. With all 8 constituents a model reaches full 8/8 coverage (🟣).
 - 2026-06: Adopted a neutral off-comparison judge (Claude Sonnet) for the judge-scored constituents after measuring ~3–4 points of self-preference from a same-family judge; and fixed-sample (300-prompt) evaluation for the four large datasets to bound cost. See Evaluation methodology.
 - 2026-06: Adopted generative scoring for BBQ, WMDP, and ETHICS, since chat APIs do not expose logprobs. Disclosed as a deviation from canonical loglikelihood scoring; values are indicative, not identical.
@@ -93,6 +94,15 @@ To check that generative extraction does not distort the scores, BBQ and WMDP we
 | WMDP | 0.51 | 0.47 | −0.03 |
 
 On a weaker `Qwen2.5-1.5B-Instruct` the WMDP gap was much larger (−0.15) and **shrank to −0.03 at 3B**. The gap is therefore a **format-following** effect, not a flaw in the scoring method: as a model gets better at emitting a parseable answer — which frontier chat models do reliably — generative extraction converges on the loglikelihood score. The models on this leaderboard are all well inside that regime, so their generative MCQ scores faithfully track the canonical method, and the ordering is not a generative-scoring artifact. ETHICS could not be cross-checked: its native loglikelihood task ships as a dataset *script* that current `datasets` refuses to load — the same reason Raidex scores it generatively. (Calibration here is on open models runnable locally; extending it to a larger model and reporting the full generative-vs-loglikelihood correlation across models is planned.)
+
+### Reasoning-locked models
+
+Some frontier models ship "reasoning-locked": the API rejects `temperature=0` (only the default, 1, is allowed), and the model spends hidden reasoning tokens before emitting its answer. Such models (currently **GPT-5.5**) are **fully scored (8/8)** but carry two footnotes:
+
+- **Sampled, not greedy.** Their generative MCQ benchmarks (BBQ, WMDP, ETHICS) run at `temperature=1` — sampled — where every other model runs greedy `temperature=0`. The calibration above is a temp-0 result and does **not** cover these sampled scores, so treat GPT-5.5's MCQ numbers as approximate (±a few points).
+- **Token budget.** A small `max_gen_toks` (ETHICS uses 64) is consumed by reasoning before any answer is produced, returning a 400 ("max_tokens reached"); the budget is raised to a 2048 floor so reasoning plus the short answer fit.
+
+One thing that *looked* at first like a wholesale content-filter refusal was not. GPT-5.5 returns a safety-policy 400 on only **~6% of WMDP-bio items (0% of cyber/chem)** — but lm-eval's async client crashes outright on even that few, which took the whole WMDP task down and made it look like a refusal. Re-measured with a robust direct-call harness (the task's own prompt and extraction, tolerant of per-item 400s), GPT-5.5 in fact **answers WMDP readily and accurately — it carries the *highest* hazardous-knowledge score on the board.** WMDP is therefore scored, not excluded; the ~6% filtered bio items are a minor, under-guard omission. (StrongREJECT similarly drops the ~17% hardest jailbreaks the filter blocks, which slightly *under*-states its safety, since those were refusals.) The lesson: an input-filter 400 is not evidence the model lacks the knowledge — here it plainly had it.
 
 ### Judging
 

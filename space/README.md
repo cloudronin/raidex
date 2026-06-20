@@ -27,12 +27,12 @@ Site: https://raidex.ai
 
 ## Key Findings
 
-_Provisional — 2026-06 re-run, 11 models on all 8 benchmarks (Qwen / Gemma still landing; Mistral excluded — rate-limited). Independent automated evaluations, not self-reported._
+_Provisional — 2026-06 re-run, 12 models on all 8 benchmarks (Qwen / Gemma + an open-weight batch still landing; Mistral excluded — rate-limited). Independent automated evaluations, not self-reported._
 
-- **Capability and responsibility are essentially decoupled** — capability (Artificial Analysis Intelligence Index) vs RAI Score barely correlate (**Pearson r ≈ 0.1**, exact live value on the chart). The most capable model, Claude Opus 4.8, tops the RAI board (71.6), but much-less-capable models (Gemini 2.5 Flash, GPT-4o, Llama 3.3 70B) match it.
-- **Tight top cluster, closed + open:** Opus 4.8 (71.6), **Gemini 2.5 Flash (69.2)**, GPT-4o (69.2), Sonnet 4.6 (68.6) and **Llama 3.3 70B (68.0, open)** are within sampling error of one another; DeepSeek V3.2 (66.1, open) just behind. Open weights are competitive on responsibility.
-- **Capability ≠ responsibility within a lab:** GPT-4o (69.2) outscores the newer GPT-5.2 (64.2).
-- **Caveats:** sampled (composite ±~2 pts → top-cluster ranks are ties; the real signal is the ~17-pt top-to-bottom spread); generative MCQ scoring validated against loglikelihood (see Methodology → Calibration); single neutral judge; the RAI Score is a defined index, not a safety certificate.
+- **Capability and responsibility are decoupled** — capability (Artificial Analysis Intelligence Index) vs RAI Score barely correlate (**Pearson r ≈ 0.2, not significant**; exact live value on the chart). The sharpest case: **GPT-5.5, the most capable model on the board, lands mid-cluster (69.1) and posts the worst hazardous-knowledge (WMDP) score** — tied on RAI with far-less-capable GPT-4o and Gemini 2.5 Flash.
+- **Tight top cluster, closed + open, every capability tier:** Opus 4.8 (71.6), Gemini 2.5 Flash (69.2), GPT-4o (69.2), **GPT-5.5 (69.1)**, Sonnet 4.6 (68.6) and **Llama 3.3 70B (68.0, open)** are within sampling error; DeepSeek V3.2 (66.1, open) just behind. Open weights are competitive on responsibility.
+- **Capability ≠ responsibility within a lab:** GPT-4o (69.2) outscores the newer GPT-5.2 (64.2); GPT-5.5 leads OpenAI on capability yet carries the most hazardous knowledge.
+- **Caveats:** sampled (composite ±~2 pts → top-cluster ranks are ties; the real signal is the ~17-pt top-to-bottom spread); the correlation is weak and unstable at this n (one model moved r 0.13→0.22); generative MCQ validated against loglikelihood (Methodology → Calibration); GPT-5.5's MCQs are sampled (temp=1, reasoning-locked); single neutral judge; the RAI Score is a defined index, not a safety certificate.
 
 Full, live results: <https://huggingface.co/spaces/cloudronin/raidex>
 
