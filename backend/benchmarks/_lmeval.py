@@ -35,11 +35,20 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
         num_concurrent = int(os.environ.get("RAIDEX_LMEVAL_CONCURRENCY",
                                             os.environ.get("RAIDEX_CONCURRENCY", "8")))
     max_retries = int(os.environ.get("RAIDEX_LMEVAL_RETRIES", "6"))
-    # Models that reject temperature=0 (gpt-5.5, reasoning-locked): force temperature=1,
-    # else lm-eval's default greedy temperature=0 makes every proxied request 400 and
-    # collapses the backend's aiohttp session ("Session is closed" → lm_eval exits 1).
+    # Reasoning-locked models (e.g. gpt-5.5) need two gen-kwargs adjustments:
+    #  (1) temperature=1 — they reject temperature=0 (only the default is allowed), and
+    #      lm-eval's greedy default temp=0 makes every proxied request 400 and collapses
+    #      the backend's aiohttp session ("Session is closed" → lm_eval exits 1);
+    #  (2) a reasoning-sized max_gen_toks — they spend tokens on hidden reasoning BEFORE
+    #      the answer, so a small cap (ETHICS uses 64) is exhausted by reasoning alone and
+    #      the API 400s with "max_tokens reached". Raise to a floor that fits reasoning +
+    #      the short MCQ answer (it's a cap, so models that finish early cost no more).
+    # gpt-5.2 and earlier accept temperature=0 and aren't in the set — unaffected.
     if model_id in REJECTS_TEMP0:
-        gen_kwargs = f"{gen_kwargs},temperature=1" if gen_kwargs else "temperature=1"
+        kw = dict(p.split("=", 1) for p in gen_kwargs.split(",")) if gen_kwargs else {}
+        kw["temperature"] = "1"
+        kw["max_gen_toks"] = str(max(int(kw.get("max_gen_toks", 0)), 2048))
+        gen_kwargs = ",".join(f"{k}={v}" for k, v in kw.items())
     out_dir = os.path.join(OUT_ROOT, out_name)
     os.makedirs(out_dir, exist_ok=True)
     task_arg = ",".join(tasks) if isinstance(tasks, (list, tuple)) else tasks
