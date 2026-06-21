@@ -309,21 +309,25 @@ def build_capability_vs_rai_scatter():
         return (nm.replace("Meta-Llama-3.3-70B-Instruct", "Llama-3.3-70B")
                   .replace("Qwen3-235B-A22B-Instruct-2507", "Qwen3-235B")
                   .replace("-20251001", ""))
-    # De-collide labels: place each point's text on a side not already taken by a nearby
-    # point, so clustered labels (gpt-4o / gemini / llama, etc.) don't stack on top center.
+    # De-collide labels: point each label in the direction AWAY from its nearby neighbours'
+    # centroid, so clustered points (gpt-4o / gemini / llama, gemma-3 / gpt-4o-mini) splay
+    # apart in different directions instead of stacking on top-center.
+    import math
     xr = (max(xs) - min(xs)) or 1.0
     yr = (max(ys) - min(ys)) or 1.0
-    _POS = ["top center", "bottom center", "middle right", "middle left"]
-    pos_by_i, placed = {}, []
-    for i in sorted(range(n), key=lambda k: (-ys[k], xs[k])):
-        pick = _POS[0]
-        for cand in _POS:
-            if not any(cand == pp and abs(xs[i] - px) / xr < 0.13 and abs(ys[i] - py) / yr < 0.10
-                       for px, py, pp in placed):
-                pick = cand
-                break
-        pos_by_i[i] = pick
-        placed.append((xs[i], ys[i], pick))
+    _SECT = [(22.5, "middle right"), (67.5, "top right"), (112.5, "top center"),
+             (157.5, "top left"), (202.5, "middle left"), (247.5, "bottom left"),
+             (292.5, "bottom center"), (337.5, "bottom right")]
+    def _label_pos(i):
+        nb = [j for j in range(n) if j != i
+              and abs(xs[i] - xs[j]) / xr < 0.14 and abs(ys[i] - ys[j]) / yr < 0.11]
+        if not nb:
+            return "top center"
+        cx = sum(xs[j] for j in nb) / len(nb)
+        cy = sum(ys[j] for j in nb) / len(nb)
+        a = math.degrees(math.atan2((ys[i] - cy) / yr, (xs[i] - cx) / xr)) % 360
+        return next((p for hi, p in _SECT if a < hi), "middle right")
+    pos_by_i = {i: _label_pos(i) for i in range(n)}
     # Colour by weight availability so the "open models are competitive" finding is visible.
     _OPEN = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo",
              "minimax", "phi")
