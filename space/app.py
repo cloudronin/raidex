@@ -603,6 +603,7 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(refresh, "interval", seconds=1800)
     scheduler.start()
-    # ssr_mode=False keeps the app a single Python process (no SSR worker re-importing the
-    # module / bypassing the snapshot cache) — part of the fix for the re-download/restart loop.
-    app.queue(default_concurrency_limit=40).launch(ssr_mode=False)
+    # SSR left at HF's default: disabling it (ssr_mode=False) stopped HF from promoting/serving
+    # the new build (HF's infra expects the SSR worker). The render loop is fixed by removing
+    # app.load above — no per-render fetch — which holds regardless of SSR (module loads once).
+    app.queue(default_concurrency_limit=40).launch()
