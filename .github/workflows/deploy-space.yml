@@ -1,6 +1,6 @@
 name: Deploy Space to HuggingFace
 
-# Pushes the space/ subdirectory to the cloudronin/raidex HF Space whenever it
+# Pushes the space/ subdirectory to the cloudronin/raidex-space HF Space whenever it
 # changes on main. Requires a repo secret HF_TOKEN (a HuggingFace write token
 # with access to the Space). The app lives in space/ but HF Spaces expect files
 # at the repo root, so we upload the folder contents via huggingface_hub rather
@@ -34,11 +34,11 @@ jobs:
           from huggingface_hub import HfApi
           HfApi().upload_folder(
               folder_path="space",
-              repo_id="cloudronin/raidex",
+              repo_id="cloudronin/raidex-space",
               repo_type="space",
               token=os.environ["HF_TOKEN"],
               commit_message=f"Sync from GitHub main ({os.environ.get('GITHUB_SHA','')[:7]})",
               ignore_patterns=[".venv/*", "__pycache__/*", "*.pyc", ".git/*"],
           )
-          print("Synced space/ -> cloudronin/raidex Space")
+          print("Synced space/ -> cloudronin/raidex-space Space")
           PY
