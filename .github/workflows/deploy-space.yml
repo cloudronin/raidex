@@ -21,6 +21,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install "huggingface_hub>=0.23"
+      - name: Data-integrity gate (developers mapped · rank RAI-descending · Key Findings consistent)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python space/check_integrity.py   # exits non-zero -> deploy blocked, bad data never ships
       - name: Upload space/ to the HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

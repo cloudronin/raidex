@@ -14,12 +14,15 @@ import json
 import os
 import re
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import gradio as gr
 import pandas as pd
 import plotly.graph_objects as go
+
+from check_integrity import developer_for  # canonical model -> developer (single source of truth)
 
 HERE = Path(__file__).resolve().parent
 DATA_SOURCE = os.environ.get("RAIDEX_DATA_SOURCE", "local").lower()
@@ -76,9 +79,23 @@ METHODOLOGY_MD = _read_text(HERE / "METHODOLOGY.md", "METHODOLOGY.md not found."
 # ----------------------------------------------------------------------------
 # Storage layer — the ONLY place that branches on local vs HF.
 # ----------------------------------------------------------------------------
+# Cache snapshot paths per repo for a TTL. app.load fires load_results() on every (SSR)
+# render and the scheduler adds more, so WITHOUT this the Space re-runs snapshot_download on
+# every request — a download loop that pins the app and fails its health check (stuck
+# "restarting forever"). Re-pull at most every RAIDEX_SNAPSHOT_TTL seconds.
+_SNAP_CACHE: dict = {}
+_SNAP_TTL = float(os.environ.get("RAIDEX_SNAPSHOT_TTL", "300"))
+
+
 def _hf_snapshot(repo: str) -> str:
     from huggingface_hub import snapshot_download
-    return snapshot_download(repo_id=repo, repo_type="dataset")
+    hit = _SNAP_CACHE.get(repo)
+    now = time.time()
+    if hit and (now - hit[1]) < _SNAP_TTL:
+        return hit[0]
+    path = snapshot_download(repo_id=repo, repo_type="dataset")
+    _SNAP_CACHE[repo] = (path, now)
+    return path
 
 
 def _results_dir() -> str:
@@ -136,10 +153,14 @@ def load_results() -> pd.DataFrame:
     rows = []
     for doc in _iter_result_docs(_results_dir()):
         cfg, comp, res = doc.get("config", {}), doc.get("composite", {}), doc.get("results", {})
+        name = cfg.get("model_name") or cfg.get("model_id", "?")
         row = {
             "Badge": comp.get("badge_emoji", "⚪"),
-            "Model": cfg.get("model_name") or cfg.get("model_id", "?"),
-            "Developer": cfg.get("developer", ""),
+            "Model": name,
+            # Developer is DERIVED from the model name (single source of truth in
+            # check_integrity.developer_for), NOT the serving provider stored in the JSON —
+            # SambaNova/HF-hosted models were otherwise mis-attributed to their host.
+            "Developer": developer_for(name) or "?",
             "RAI Score": comp.get("rai_score"),
             "Coverage": comp.get("rai_coverage", ""),
             "_model_id": cfg.get("model_id", ""),
@@ -160,7 +181,10 @@ def load_results() -> pd.DataFrame:
         rows.append(row)
     df = pd.DataFrame(rows)
     if not df.empty:
-        df = df.sort_values("RAI Score", ascending=False, na_position="last").reset_index(drop=True)
+        # RAI descending, then Model name ascending so ties (e.g. gpt-4o / gemini both 69.2)
+        # rank deterministically; Rank is then derived from this order — the single source.
+        df = df.sort_values(["RAI Score", "Model"], ascending=[False, True],
+                            na_position="last").reset_index(drop=True)
         df.insert(0, "Rank", range(1, len(df) + 1))
     return df
 
