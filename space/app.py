@@ -196,7 +196,13 @@ DISPLAY_COLS = ["Rank", "Badge", "Model", "Developer", "RAI Score", "Coverage"] 
 def _display(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
         return pd.DataFrame(columns=DISPLAY_COLS)
-    return df[[c for c in DISPLAY_COLS if c in df.columns]]
+    out = df[[c for c in DISPLAY_COLS if c in df.columns]].copy()
+    # Display only: pad every score to one decimal (69 -> 69.0); missing -> em dash.
+    # Never written back to the source data the integrity gate reads.
+    for c in ["RAI Score"] + BENCH_LABELS:
+        if c in out.columns:
+            out[c] = out[c].map(lambda v: f"{float(v):.1f}" if pd.notna(v) else "—")
+    return out
 
 
 def refresh():
@@ -245,8 +251,11 @@ def model_choices():
 # ----------------------------------------------------------------------------
 GREEN = [[0.0, "#0b3d2e"], [1.0, "#16a34a"]]
 RED = [[0.0, "#3d0b0b"], [1.0, "#dc2626"]]
-_LAYOUT = dict(autosize=True, height=560, paper_bgcolor="white", plot_bgcolor="white",
-               font=dict(size=15), margin=dict(l=160, r=150, t=80, b=120))
+_FONT = "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif"
+_LAYOUT = dict(autosize=True, height=560, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+               font=dict(size=14, family=_FONT, color="#334155"),
+               title_font=dict(size=16, family=_FONT), title_x=0.02, title_xanchor="left",
+               margin=dict(l=160, r=110, t=72, b=120))
 
 
 def _empty_fig(title: str):
@@ -384,9 +393,14 @@ def build_capability_vs_rai_scatter():
     title = "Capability vs Responsibility" + (f"   ·   {rtxt}" if rtxt else "")
     fig.update_layout(title=title,
                       xaxis_title="Capability  (Artificial Analysis Intelligence Index, 2026-06-18)",
-                      yaxis_title="RAI Score", height=560,
+                      yaxis_title="RAI Score", height=560, autosize=True,
+                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                      font=dict(size=14, family=_FONT, color="#334155"),
+                      title_font=dict(size=18, family=_FONT), title_x=0.0, title_xanchor="left",
                       legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="left", x=0),
                       margin=dict(l=70, r=60, t=92, b=120))
+    fig.update_xaxes(gridcolor="#eef2f7", zeroline=False)
+    fig.update_yaxes(gridcolor="#eef2f7", zeroline=False)
     # Short coverage note, dropped well below the x-axis title to avoid overlapping it.
     fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored · RAI is live from the leaderboard",
                        xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
@@ -486,14 +500,55 @@ def submit_eval(model_id: str, tier: str):
 # ----------------------------------------------------------------------------
 # UI
 # ----------------------------------------------------------------------------
-with gr.Blocks(title="Raidex") as app:
+THEME = gr.themes.Soft(
+    primary_hue="indigo",
+    neutral_hue="slate",
+    font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
+    font_mono=[gr.themes.GoogleFont("IBM Plex Mono"), "ui-monospace", "monospace"],
+)
+CSS = """
+.hero-stats { display:flex; gap:1.75rem; flex-wrap:wrap; margin:.4rem 0 1.25rem; align-items:baseline; }
+.hero-stats .stat { font-size:1rem; color:var(--body-text-color-subdued); }
+.hero-stats .stat b { color:var(--primary-600); font-size:1.25rem; font-weight:700; }
+#board-table table td { font-family:var(--font-mono); font-size:.85rem; }
+"""
+
+
+def _hero_stats_html():
+    """Live RAI spread for the hero; the capability-range figure mirrors the authored finding
+    in findings.md ("capability spans 5x"), kept consistent rather than recomputed. Display
+    only — never written back to the data the integrity gate reads."""
+    rai = (LEADERBOARD["RAI Score"].dropna()
+           if LEADERBOARD is not None and not LEADERBOARD.empty else pd.Series(dtype=float))
+    spread = (rai.max() - rai.min()) if not rai.empty else 0
+    s1 = (f"<span class='stat'><b>{spread:.0f}-point</b> RAI spread vs a <b>5&times;</b> capability range</span>"
+          if spread else "")
+    return ("<div class='hero-stats'>" + s1
+            + "<span class='stat'><b>r &asymp; 0.17</b> &middot; capability barely predicts RAI</span>"
+            + "<span class='stat'><b>#2 overall</b> is open-weight</span></div>")
+
+
+HERO_STATS = _hero_stats_html()
+
+with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
     gr.Markdown("# Raidex\n**An open Responsible AI index for frontier models** · "
                 "[raidex.ai](https://raidex.ai)")
 
+    # ---- Hero: the finding and the scatter lead; the board is evidence, in the tab below ----
+    gr.Markdown("## Capability doesn't buy responsibility")
+    gr.Markdown("_Every number here is an independent automated evaluation — not self-reported._")
+    gr.HTML(HERO_STATS)
+    cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
+
     with gr.Tabs() as tabs:
         # ---- Main page: leaderboard + the gap + coverage, all in one ----
-        with gr.Tab("🏆 Leaderboard", id="leaderboard"):
-            gr.Markdown("## 🏆 Leaderboard")
+        with gr.Tab("Findings", id="leaderboard"):
+            # 1. The finding — prose, demoted from the hero to first in-tab section
+            gr.Markdown("## Key Findings")
+            gr.Markdown(KEY_FINDINGS_MD)
+
+            # 2. The board — supporting evidence; search + tier filter sit with the table
+            gr.Markdown("## The board")
             gr.Markdown("Frontier models ranked by **RAI Score** — the unweighted mean of their normalized "
                         "scores across 8 open Responsible-AI benchmarks (0–100). Every number here is from "
                         "Raidex's own automated runs, not self-reported. Search by name or filter by tier; "
@@ -502,13 +557,15 @@ with gr.Blocks(title="Raidex") as app:
                 search = gr.Textbox(placeholder="Search models...", show_label=False, scale=3)
                 tier_filter = gr.CheckboxGroup(["Tier A", "Tier B", "Tier C"], value=["Tier A", "Tier B"],
                                                label="Benchmark tiers", scale=2)
-            table = gr.Dataframe(value=_display(LEADERBOARD), interactive=False, wrap=True)
-            refresh_btn = gr.Button("🔄 Refresh", scale=0)
+            table = gr.Dataframe(value=_display(LEADERBOARD), interactive=False, wrap=True,
+                                 elem_id="board-table")
+            refresh_btn = gr.Button("Refresh", scale=0)
             gr.Markdown(BADGE_LEGEND)
             search.change(filter_leaderboard, [search, tier_filter], table)
             tier_filter.change(filter_leaderboard, [search, tier_filter], table)
 
-            gr.Markdown("## 🔥 The Gap")
+            # 3. The Gap — supporting context (sourced reporting grid)
+            gr.Markdown("## The Gap")
             gr.Markdown("Why Raidex exists. Frontier developers report **capability** benchmarks almost "
                         "universally (top, green) but **Responsible-AI** benchmarks rarely (bottom, red). "
                         "Each row is a flagship model; each cell marks whether that developer publicly reports "
@@ -518,27 +575,15 @@ with gr.Blocks(title="Raidex") as app:
             gr.Markdown("*Frontier developers report capability benchmarks consistently. "
                         "RAI benchmarks? Rarely — Raidex runs all 8 anyway.*")
 
-            # Own full-width row (was sharing a Row with Key Findings, which cramped the labels).
-            gr.Markdown("## 📈 Capability vs Responsibility")
-            gr.Markdown("Does more capable mean more responsible? Each model's capability (Artificial Analysis "
-                        "Intelligence Index, x-axis) plotted against its Raidex RAI Score (y-axis), with a trend "
-                        "line and Pearson *r*. A weak/flat slope means the two are largely independent — high RAI "
-                        "isn't reserved for the most capable models.")
-            cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
-
-            gr.Markdown("## 🔑 Key Findings")
-            gr.Markdown("The headline results from the latest evaluation run.")
-            gr.Markdown(KEY_FINDINGS_MD)
-
-            gr.Markdown("## 📖 Methodology")
-            gr.Markdown("How to read these scores.")
+            # 4. Methodology teaser — last
+            gr.Markdown("## Methodology")
             gr.Markdown("The RAI Score is a defined index — an unweighted mean of normalized open-benchmark "
                         "scores across safety, fairness, factuality, security, machine ethics, robustness, "
                         "and privacy. Scores are generative/judge-based and sampled; read them within Raidex, "
                         "not against canonical loglikelihood leaderboards.")
-            method_btn = gr.Button("📖 Read the full methodology →", scale=0)
+            method_btn = gr.Button("Read the full methodology →", scale=0)
 
-        with gr.Tab("🔍 Model Card", id="modelcard"):
+        with gr.Tab("Model Card", id="modelcard"):
             picker = gr.Dropdown(label="Select model", choices=model_choices())
             with gr.Row():
                 with gr.Column(scale=1):
@@ -549,12 +594,12 @@ with gr.Blocks(title="Raidex") as app:
             m_cap = gr.Markdown()
             picker.change(model_card, picker, [m_summary, m_radar, m_table, m_cap])
 
-        with gr.Tab("🕸️ Radar", id="radar"):
+        with gr.Tab("Radar", id="radar"):
             r_select = gr.Dropdown(multiselect=True, label="Compare models", choices=model_choices())
             r_plot = gr.Plot(value=build_radar([]))
             r_select.change(build_radar, r_select, r_plot)
 
-        with gr.Tab("🚀 Submit", id="submit"):
+        with gr.Tab("Submit", id="submit"):
             gr.Markdown("### Evaluate a model on RAI benchmarks")
             gr.Markdown("Model ID uses litellm format: `provider/model_name` "
                         "(e.g. `openai/gpt-5.2`, `anthropic/claude-opus-4-8`, `gemini/gemini-2.5-flash`)")
@@ -564,20 +609,20 @@ with gr.Blocks(title="Raidex") as app:
             s_btn = gr.Button("Submit for evaluation", variant="primary")
             s_msg = gr.Markdown()
             gr.Markdown("---")
-            with gr.Accordion("⏳ Pending evaluations", open=False):
+            with gr.Accordion("Pending evaluations", open=False):
                 pending_tbl = gr.Dataframe(value=get_pending(), interactive=False)
-            with gr.Accordion("✅ Completed evaluations", open=False):
+            with gr.Accordion("Completed evaluations", open=False):
                 completed_tbl = gr.Dataframe(value=get_completed(), interactive=False)
 
-        with gr.Tab("📖 Methodology", id="methodology"):
+        with gr.Tab("Methodology", id="methodology"):
             gr.Markdown(METHODOLOGY_MD)
 
-    with gr.Accordion("📙 Citation", open=False):
+    with gr.Accordion("Citation", open=False):
         gr.Textbox(value=CITATION_TEXT, lines=8, show_label=False)
     gr.Markdown("---")
     with gr.Row():
         gr.Markdown("[GitHub](https://github.com/cloudronin/raidex) · Built by Vishnu Vettrivel")
-        footer_method_btn = gr.Button("📖 Methodology", scale=0)
+        footer_method_btn = gr.Button("Methodology", scale=0)
 
     # Markdown links can't target Gradio tabs, so route the methodology links through tab selection.
     method_btn.click(lambda: gr.Tabs(selected="methodology"), None, tabs)
@@ -598,15 +643,26 @@ with gr.Blocks(title="Raidex") as app:
     # the 🔄 Refresh button and the 30-min scheduler.
 
 
+# Auto-refresh at MODULE level: HF launches the `app` object directly and never runs the
+# __main__ block below, so a scheduler started there would never fire on the Space. Reload
+# results every 30 min so newly-evaluated models appear without a manual Refresh. Guarded so
+# a hot-reload double-import can't stack schedulers or take the app down.
+def _start_auto_refresh():
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        sched = BackgroundScheduler(daemon=True)
+        sched.add_job(refresh, "interval", seconds=1800)
+        sched.start()
+        return sched
+    except Exception as e:
+        print("[raidex] auto-refresh scheduler not started:", e)
+        return None
+
+
+_AUTO_REFRESH = _start_auto_refresh()
+
+
 if __name__ == "__main__":
-    from apscheduler.schedulers.background import BackgroundScheduler
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(refresh, "interval", seconds=1800)
-    scheduler.start()
-    # ssr_mode=False: gradio's SSR (default on HF for 5.x/6.x) leaves the Space stuck at
-    # APP_STARTING forever — it serves on the direct *.hf.space URL but never reaches RUNNING,
-    # so the embedded Space page shows "Starting..." indefinitely. Single-process gradio 5.x is
-    # HF's classic, well-routed setup and reaches RUNNING. (An earlier ssr-off attempt looked
-    # like it "broke serving" — that was the app.load download loop blocking promotion, now
-    # removed above; the module loads once at startup, so no re-download loop here.)
+    # Local runs only — HF ignores this block and launches `app` itself (SSR is controlled on
+    # the Space via the GRADIO_SSR_MODE env var). ssr_mode=False keeps local single-process.
     app.queue(default_concurrency_limit=40).launch(ssr_mode=False)

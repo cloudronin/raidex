@@ -22,7 +22,7 @@ tags:
 An open Responsible AI index for frontier foundation models. Benchmarks across
 safety, fairness, factuality, security, robustness, privacy, and ethics.
 
-Live leaderboard: https://huggingface.co/spaces/cloudronin/raidex
+Live leaderboard: https://huggingface.co/spaces/cloudronin/raidex-space
 Site: https://raidex.ai
 
 ## Key Findings
@@ -35,7 +35,7 @@ _2026-06 re-run — 17 frontier models (16 on all 8 benchmarks; MiniMax on 7; Mi
 - **Capability ≠ responsibility within a lab:** GPT-4o (69.2) outscores the newer GPT-5.2 (64.2); GPT-5.5 leads OpenAI on capability yet carries the most hazardous knowledge.
 - **Caveats:** the correlation is weak, non-significant, and was volatile as the board filled (r moved 0.13→0.29→0.17; bootstrap 95% CI [−0.40, 0.58]) — read the *scatter*, not the point estimate; sampled (~150–300 items/task → top-cluster ranks are ties); generative MCQ validated against loglikelihood (Methodology → Calibration); GPT-5.5's MCQs are sampled (temp=1); single neutral judge; the RAI Score is a defined index, not a safety certificate.
 
-Full, live results: <https://huggingface.co/spaces/cloudronin/raidex>
+Full, live results: <https://huggingface.co/spaces/cloudronin/raidex-space>
 
 _The findings are generated from independent automated evaluations, not
 self-reported scores from model developers._
