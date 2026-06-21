@@ -27,13 +27,13 @@ Site: https://raidex.ai
 
 ## Key Findings
 
-_2026-06 re-run — 17 frontier models (16 on all 8 benchmarks; MiniMax on 7; Mistral & Phi-4 excluded as un-evaluable). Independent automated evaluations, not self-reported._
+_2026-06 re-run, 17 frontier models (16 on all 8 benchmarks; MiniMax on 7; Mistral and Phi-4 excluded as un-evaluable). Independent automated evaluations, not self-reported._
 
-- **Capability barely predicts responsibility** — capability (Artificial Analysis Intelligence Index) explains only **~3% of the variation in RAI Score** (**Pearson r ≈ 0.17, n=17, not significant**; live value on the chart). Concretely: **Qwen3-235B (open, only mid-capability) is #2**; GPT-4o and Gemini (among the least capable) tie 3rd; the 2nd-most-capable GPT-5.5 lands mid-pack with the board's **worst hazardous-knowledge (WMDP)** score; capable MiniMax sits near the bottom. Opus 4.8 tops it (71.6), but the frontier is the exception, not the rule.
-- **A ~17-point board spanning a 5× capability range:** the top cluster (≈68–72) mixes the most and least capable models — Qwen (open, mid-cap) and GPT-4o (low-cap) sit alongside Opus.
-- **Open weights are competitive:** 8 of 17 models are open-weight, and one (Qwen3-235B) is #2 overall — ahead of nearly every closed frontier system.
-- **Capability ≠ responsibility within a lab:** GPT-4o (69.2) outscores the newer GPT-5.2 (64.2); GPT-5.5 leads OpenAI on capability yet carries the most hazardous knowledge.
-- **Caveats:** the correlation is weak, non-significant, and was volatile as the board filled (r moved 0.13→0.29→0.17; bootstrap 95% CI [−0.40, 0.58]) — read the *scatter*, not the point estimate; sampled (~150–300 items/task → top-cluster ranks are ties); generative MCQ validated against loglikelihood (Methodology → Calibration); GPT-5.5's MCQs are sampled (temp=1); single neutral judge; the RAI Score is a defined index, not a safety certificate.
+- **Capability barely predicts responsibility.** Capability (Artificial Analysis Intelligence Index) explains only **~3% of the variation in RAI Score** (**Pearson r ≈ 0.17, n=17, not significant**; live value on the chart). Concretely, **Qwen3-235B (open, only mid-capability) is #2**; GPT-4o and Gemini (among the least capable) tie 3rd; the 2nd-most-capable GPT-5.5 lands mid-pack with the board's **worst hazardous-knowledge (WMDP)** score; capable MiniMax sits near the bottom. Opus 4.8 tops it (71.6), but high capability rarely tracks high responsibility.
+- **A ~17-point board spanning a 5x capability range.** The top cluster (≈68 to 72) mixes the most and least capable models: Qwen (open, mid-cap) and GPT-4o (low-cap) sit alongside Opus.
+- **Open weights are competitive.** 8 of 17 models are open-weight, and one (Qwen3-235B) is #2 overall, ahead of nearly every closed frontier system.
+- **Capability does not equal responsibility within a lab.** GPT-4o (69.2) outscores the newer GPT-5.2 (64.2); GPT-5.5 leads OpenAI on capability yet carries the most hazardous knowledge.
+- **Caveats:** the correlation is weak, non-significant, and was volatile as the board filled (r moved 0.13 to 0.29 to 0.17; bootstrap 95% CI [−0.40, 0.58]), so look at the full *scatter* rather than the point estimate; sampled (~150 to 300 items/task, so top-cluster ranks are ties); generative MCQ validated against loglikelihood (Methodology, Calibration); GPT-5.5's MCQs are sampled (temp=1); single neutral judge; the RAI Score is a defined index, not a safety certificate.
 
 Full, live results: <https://huggingface.co/spaces/cloudronin/raidex-space>
 
@@ -53,10 +53,10 @@ shows the capability-vs-RAI reporting gap side by side.
 
 ## How it works
 
-Submit a model → the backend runs 6 RAI benchmarks automatically → scores appear
+Submit a model, the backend runs 6 RAI benchmarks automatically, and scores appear
 on the leaderboard.
 
-## Benchmarks (Tier A — automated)
+## Benchmarks (Tier A, automated)
 
 | Benchmark | Dimension | Pipeline | Cost/Model |
 |-----------|-----------|----------|------------|
@@ -72,10 +72,10 @@ scored generatively (chat APIs don't expose logprobs); see METHODOLOGY.md.
 
 ## Badges
 
-- 🟣 **Full RAI Profile** — all 8 benchmarks (Tier A + B + C)
-- 🔵 **Independently Evaluated** — ≥4 benchmarks run by our automated pipeline
-- 🟡 **Self-Reported Only** — scores from system cards / published leaderboards
-- ⚪ **Partial** — fewer than 4 benchmarks
+- 🟣 **Full RAI Profile.** All 8 benchmarks (Tier A + B + C)
+- 🔵 **Independently Evaluated.** ≥4 benchmarks run by our automated pipeline
+- 🟡 **Self-Reported Only.** Scores from system cards / published leaderboards
+- ⚪ **Partial.** Fewer than 4 benchmarks
 
 ## Composite Score
 
@@ -84,8 +84,8 @@ scored generatively (chat APIs don't expose logprobs); see METHODOLOGY.md.
 
 ## Prior art
 
-DecodingTrust · COMPL-AI · HELM Safety · MLCommons AILuminate · FLI AI Safety
-Index · DeepSight (2026). Raidex aggregates across independent open benchmarks with
+DecodingTrust, COMPL-AI, HELM Safety, MLCommons AILuminate, FLI AI Safety
+Index, and DeepSight (2026). Raidex aggregates across independent open benchmarks with
 a public submit pipeline, alongside these efforts.
 
 ## License

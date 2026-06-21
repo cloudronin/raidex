@@ -1,4 +1,4 @@
-"""Raidex — an open Responsible AI index for frontier models (HuggingFace Space).
+"""Raidex: an open Responsible AI index for frontier models (HuggingFace Space).
 
 Reads model evaluations from the raidex-results dataset and renders a leaderboard,
 the capability-vs-RAI "gap" visual, model cards, and a submit form that queues new
@@ -50,8 +50,8 @@ DIM_LABEL = {"safety": "Safety", "fairness_bias": "Fairness & Bias", "factuality
              "security": "Security", "robustness": "Robustness", "privacy": "Privacy",
              "machine_ethics": "Machine Ethics"}
 ACTIVE_DIMS = ["safety", "fairness_bias", "factuality", "security", "machine_ethics"]
-BADGE_LEGEND = ("🟣 Full RAI Profile (8/8)  ·  🔵 Independently Evaluated  ·  "
-                "🟡 Self-Reported Only  ·  ⚪ Partial Coverage")
+BADGE_LEGEND = ("🟣 Full RAI Profile (8/8)  |  🔵 Independently Evaluated  |  "
+                "🟡 Self-Reported Only  |  ⚪ Partial Coverage")
 MODEL_ID_RE = re.compile(r"^[a-z0-9_\-]+/[A-Za-z0-9._:\-]+$")
 
 CITATION_TEXT = """@misc{raidex2026,
@@ -77,11 +77,11 @@ METHODOLOGY_MD = _read_text(HERE / "METHODOLOGY.md", "METHODOLOGY.md not found."
 
 
 # ----------------------------------------------------------------------------
-# Storage layer — the ONLY place that branches on local vs HF.
+# Storage layer: the ONLY place that branches on local vs HF.
 # ----------------------------------------------------------------------------
 # Cache snapshot paths per repo for a TTL. app.load fires load_results() on every (SSR)
 # render and the scheduler adds more, so WITHOUT this the Space re-runs snapshot_download on
-# every request — a download loop that pins the app and fails its health check (stuck
+# every request (a download loop that pins the app and fails its health check, stuck
 # "restarting forever"). Re-pull at most every RAIDEX_SNAPSHOT_TTL seconds.
 _SNAP_CACHE: dict = {}
 _SNAP_TTL = float(os.environ.get("RAIDEX_SNAPSHOT_TTL", "300"))
@@ -158,7 +158,7 @@ def load_results() -> pd.DataFrame:
             "Badge": comp.get("badge_emoji", "⚪"),
             "Model": name,
             # Developer is DERIVED from the model name (single source of truth in
-            # check_integrity.developer_for), NOT the serving provider stored in the JSON —
+            # check_integrity.developer_for), NOT the serving provider stored in the JSON.
             # SambaNova/HF-hosted models were otherwise mis-attributed to their host.
             "Developer": developer_for(name) or "?",
             "RAI Score": comp.get("rai_score"),
@@ -182,7 +182,7 @@ def load_results() -> pd.DataFrame:
     df = pd.DataFrame(rows)
     if not df.empty:
         # RAI descending, then Model name ascending so ties (e.g. gpt-4o / gemini both 69.2)
-        # rank deterministically; Rank is then derived from this order — the single source.
+        # rank deterministically; Rank is then derived from this order, the single source.
         df = df.sort_values(["RAI Score", "Model"], ascending=[False, True],
                             na_position="last").reset_index(drop=True)
         df.insert(0, "Rank", range(1, len(df) + 1))
@@ -201,7 +201,7 @@ def _display(df: pd.DataFrame) -> pd.DataFrame:
     # Never written back to the source data the integrity gate reads.
     for c in ["RAI Score"] + BENCH_LABELS:
         if c in out.columns:
-            out[c] = out[c].map(lambda v: f"{float(v):.1f}" if pd.notna(v) else "—")
+            out[c] = out[c].map(lambda v: f"{float(v):.1f}" if pd.notna(v) else "")
     return out
 
 
@@ -213,9 +213,9 @@ def refresh():
 
 def refresh_all():
     """Reload results and push fresh values to every results-driven component, so a
-    newly-evaluated model flows through everywhere — the leaderboard table, the
-    Capability-vs-RAI scatter, the Model Card + Radar dropdown choices, and the
-    pending/completed queues — on each page load and on Refresh. (The Gap heatmaps
+    newly-evaluated model flows through everywhere: the leaderboard table, the
+    Capability-vs-RAI scatter, the Model Card and Radar dropdown choices, and the
+    pending/completed queues, on each page load and on Refresh. (The Gap heatmaps
     are sourced reference data, not submission-driven, so they intentionally stay
     static.) Output order must match the wired component list at the end of the app."""
     global LEADERBOARD
@@ -253,8 +253,8 @@ GREEN = [[0.0, "#0b3d2e"], [1.0, "#16a34a"]]
 RED = [[0.0, "#3d0b0b"], [1.0, "#dc2626"]]
 _FONT = "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif"
 # Charts sit on a transparent background over the page, which can be light OR dark (gradio
-# follows the system theme). Use a mid-slate text + low-opacity gridlines that read on both —
-# a fixed dark text (#334155) was invisible in dark mode.
+# follows the system theme). Use a mid-slate text and low-opacity gridlines that read on both.
+# A fixed dark text (#334155) was invisible in dark mode.
 _FG = "#94a3b8"
 _GRID = "rgba(148,163,184,0.25)"
 _LAYOUT = dict(autosize=True, height=560, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
@@ -287,7 +287,7 @@ def build_capability_heatmap():
 
 
 def build_rai_heatmap():
-    """Which RAI benchmarks each frontier developer self-reports (sourced grid) — sparse.
+    """Which RAI benchmarks each frontier developer self-reports (sourced grid): sparse.
     This is reporting, not Raidex's coverage: our leaderboard is what fills the gap."""
     benches = CAP.get("rai_benchmarks", [])
     models = list(CAP.get("models", {}).keys())
@@ -324,7 +324,7 @@ def build_radar(models):
 
 
 def build_capability_vs_rai_scatter():
-    """Capability (Artificial Analysis Intelligence Index) vs RAI Score — the core
+    """Capability (Artificial Analysis Intelligence Index) vs RAI Score: the core
     'does capability predict responsibility?' view. Replaces the coverage scatter,
     which goes flat once every model reaches 8/8. Capability is sourced + static
     (data/capability_scores.json); RAI reads live from the leaderboard, so the plot
@@ -396,7 +396,7 @@ def build_capability_vs_rai_scatter():
     pad = (max(xs) - min(xs)) * 0.18 or 5
     fig.update_xaxes(range=[min(xs) - pad, max(xs) + pad])
     # Pearson r in the TITLE (not an in-plot box) so it can't collide with a corner label.
-    title = "Capability vs Responsibility" + (f"   ·   {rtxt}" if rtxt else "")
+    title = "Capability vs Responsibility" + (f"  ({rtxt})" if rtxt else "")
     fig.update_layout(title=title,
                       xaxis_title="Capability  (Artificial Analysis Intelligence Index, 2026-06-18)",
                       yaxis_title="RAI Score", height=560, autosize=True,
@@ -408,7 +408,7 @@ def build_capability_vs_rai_scatter():
     fig.update_xaxes(gridcolor=_GRID, zeroline=False)
     fig.update_yaxes(gridcolor=_GRID, zeroline=False)
     # Short coverage note, dropped well below the x-axis title to avoid overlapping it.
-    fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored · RAI is live from the leaderboard",
+    fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored. RAI is live from the leaderboard",
                        xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
                        font=dict(size=11, color="#888"), align="left")
     return fig
@@ -524,42 +524,42 @@ CSS = """
 def _hero_stats_html():
     """Live RAI spread for the hero; the capability-range figure mirrors the authored finding
     in findings.md ("capability spans 5x"), kept consistent rather than recomputed. Display
-    only — never written back to the data the integrity gate reads."""
+    only: never written back to the data the integrity gate reads."""
     rai = (LEADERBOARD["RAI Score"].dropna()
            if LEADERBOARD is not None and not LEADERBOARD.empty else pd.Series(dtype=float))
     spread = (rai.max() - rai.min()) if not rai.empty else 0
     s1 = (f"<span class='stat'><b>{spread:.0f}-point</b> RAI spread vs a <b>5&times;</b> capability range</span>"
           if spread else "")
     return ("<div class='hero-stats'>" + s1
-            + "<span class='stat'><b>r &asymp; 0.17</b> &middot; capability barely predicts RAI</span>"
+            + "<span class='stat'>capability barely predicts RAI (<b>r &asymp; 0.17</b>)</span>"
             + "<span class='stat'><b>#2 overall</b> is open-weight</span></div>")
 
 
 HERO_STATS = _hero_stats_html()
 
 with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
-    gr.Markdown("# Raidex\n**An open Responsible AI index for frontier models** · "
+    gr.Markdown("# Raidex\n**An open Responsible AI index for frontier models.** "
                 "[raidex.ai](https://raidex.ai)")
 
     # ---- Hero: the finding and the scatter lead; the board is evidence, in the tab below ----
     gr.Markdown("## Capability doesn't buy responsibility")
-    gr.Markdown("_Every number here is an independent automated evaluation — not self-reported._")
+    gr.Markdown("_Every score is independently evaluated by Raidex, not self-reported._")
     gr.HTML(HERO_STATS)
     cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
 
     with gr.Tabs() as tabs:
         # ---- Main page: leaderboard + the gap + coverage, all in one ----
         with gr.Tab("Findings", id="leaderboard"):
-            # 1. The finding — prose, demoted from the hero to first in-tab section
+            # 1. The finding: prose, demoted from the hero to first in-tab section
             gr.Markdown("## Key Findings")
             gr.Markdown(KEY_FINDINGS_MD)
 
-            # 2. The board — supporting evidence; search + tier filter sit with the table
+            # 2. The board: supporting evidence; search + tier filter sit with the table
             gr.Markdown("## The board")
-            gr.Markdown("Frontier models ranked by **RAI Score** — the unweighted mean of their normalized "
-                        "scores across 8 open Responsible-AI benchmarks (0–100). Every number here is from "
-                        "Raidex's own automated runs, not self-reported. Search by name or filter by tier; "
-                        "the badge shows how many of the 8 benchmarks were run.")
+            gr.Markdown("Frontier models ranked by **RAI Score**, the unweighted mean of their normalized "
+                        "scores across 8 open Responsible-AI benchmarks (0 to 100). Raidex runs every benchmark "
+                        "itself, so none of these numbers are self-reported. Search by name or filter by tier. "
+                        "The badge shows how many of the 8 benchmarks were run.")
             with gr.Row():
                 search = gr.Textbox(placeholder="Search models...", show_label=False, scale=3)
                 tier_filter = gr.CheckboxGroup(["Tier A", "Tier B", "Tier C"], value=["Tier A", "Tier B"],
@@ -571,23 +571,23 @@ with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
             search.change(filter_leaderboard, [search, tier_filter], table)
             tier_filter.change(filter_leaderboard, [search, tier_filter], table)
 
-            # 3. The Gap — supporting context (sourced reporting grid)
+            # 3. The Gap: supporting context (sourced reporting grid)
             gr.Markdown("## The Gap")
             gr.Markdown("Why Raidex exists. Frontier developers report **capability** benchmarks almost "
                         "universally (top, green) but **Responsible-AI** benchmarks rarely (bottom, red). "
                         "Each row is a flagship model; each cell marks whether that developer publicly reports "
-                        "that benchmark — the sparse red grid is the reporting gap Raidex fills.")
+                        "that benchmark. The sparse red grid is the reporting gap Raidex fills.")
             gr.Plot(value=build_capability_heatmap())
             gr.Plot(value=build_rai_heatmap())
-            gr.Markdown("*Frontier developers report capability benchmarks consistently. "
-                        "RAI benchmarks? Rarely — Raidex runs all 8 anyway.*")
+            gr.Markdown("*Frontier developers report capability benchmarks consistently but "
+                        "rarely report RAI benchmarks. Raidex runs all 8 anyway.*")
 
-            # 4. Methodology teaser — last
+            # 4. Methodology teaser: last
             gr.Markdown("## Methodology")
-            gr.Markdown("The RAI Score is a defined index — an unweighted mean of normalized open-benchmark "
+            gr.Markdown("The RAI Score is a defined index: an unweighted mean of normalized open-benchmark "
                         "scores across safety, fairness, factuality, security, machine ethics, robustness, "
-                        "and privacy. Scores are generative/judge-based and sampled; read them within Raidex, "
-                        "not against canonical loglikelihood leaderboards.")
+                        "and privacy. Scores are generative and judge-based and sampled, so read them within "
+                        "Raidex rather than against canonical loglikelihood leaderboards.")
             method_btn = gr.Button("Read the full methodology →", scale=0)
 
         with gr.Tab("Model Card", id="modelcard"):
@@ -628,7 +628,7 @@ with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
         gr.Textbox(value=CITATION_TEXT, lines=8, show_label=False)
     gr.Markdown("---")
     with gr.Row():
-        gr.Markdown("[GitHub](https://github.com/cloudronin/raidex) · Built by Vishnu Vettrivel")
+        gr.Markdown("[GitHub](https://github.com/cloudronin/raidex) | Built by Vishnu Vettrivel")
         footer_method_btn = gr.Button("Methodology", scale=0)
 
     # Markdown links can't target Gradio tabs, so route the methodology links through tab selection.
@@ -637,7 +637,7 @@ with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
 
     # Results-driven refresh, wired here (after every component exists). Page load and
     # the Refresh button repopulate the leaderboard table, the Capability-vs-RAI
-    # scatter, the Model Card + Radar dropdown choices, and the queue tables — so a
+    # scatter, the Model Card + Radar dropdown choices, and the queue tables, so a
     # newly-submitted/evaluated model shows up everywhere without a restart.
     _refresh_outs = [table, cap_scatter, picker, r_select, pending_tbl, completed_tbl]
     refresh_btn.click(refresh_all, None, _refresh_outs)
@@ -645,7 +645,7 @@ with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
         lambda: (get_pending(), get_completed()), None, [pending_tbl, completed_tbl])
     # NO app.load(refresh_all) here on purpose: it re-ran load_results()/snapshot_download on
     # EVERY (SSR) render, and under HF's SSR worker that re-downloaded the dataset on every
-    # request — a loop that pinned the app and failed its health check (stuck restarting).
+    # request (a loop that pinned the app and failed its health check, stuck restarting).
     # Every component already initialises from the startup LEADERBOARD; freshness comes from
     # the 🔄 Refresh button and the 30-min scheduler.
 
@@ -670,6 +670,6 @@ _AUTO_REFRESH = _start_auto_refresh()
 
 
 if __name__ == "__main__":
-    # Local runs only — HF ignores this block and launches `app` itself (SSR is controlled on
+    # Local runs only: HF ignores this block and launches `app` itself (SSR is controlled on
     # the Space via the GRADIO_SSR_MODE env var). ssr_mode=False keeps local single-process.
     app.queue(default_concurrency_limit=40).launch(ssr_mode=False)

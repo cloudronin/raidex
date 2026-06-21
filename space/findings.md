@@ -1,17 +1,17 @@
-_2026-06 re-run — 17 frontier models scored on all 8 benchmarks. Mistral Large and Phi-4 are excluded (un-evaluable on our endpoints). Every number is an independent automated evaluation, not a self-reported score._
+_2026-06 re-run. 17 frontier models scored on all 8 benchmarks. Mistral Large and Phi-4 are excluded (un-evaluable on our endpoints). Every number is an independent automated evaluation, not a self-reported score._
 
 ### Capability barely predicts responsibility
 
-Across the 17 models, capability (Artificial Analysis Intelligence Index) explains only **~3% of the variation in RAI Score** — **Pearson r ≈ 0.17 (n=17), not statistically significant** (95% CI spans zero; the chart shows the live value). The board makes the point concretely:
+Across the 17 models, capability (Artificial Analysis Intelligence Index) explains only **~3% of the variation in RAI Score**. **Pearson r ≈ 0.17 (n=17), not statistically significant** (95% CI spans zero; the chart shows the live value). The board makes the point concretely:
 
-- **Qwen3-235B — open-weight and only mid-capability — is #2** on responsibility, above every closed frontier model except Opus.
+- **Qwen3-235B**, open-weight and only mid-capability, **is #2** on responsibility, above every closed frontier model except Opus.
 - **GPT-4o and Gemini 2.5 Flash**, among the *least* capable models here, tie for 3rd.
 - The 2nd-most-capable model, **GPT-5.5**, lands mid-pack and posts the board's **worst hazardous-knowledge (WMDP)** score.
 - **MiniMax-M2.7** (capable) sits near the bottom.
 
-Claude Opus 4.8 does top the board (71.6) — so the frontier *can* lead — but it is the exception, not the rule. **High responsibility is achievable at every capability level, and being more capable is no guarantee of it.** (An earlier pipeline artifact had Opus scoring lowest — corrected; see the methodology change log.)
+Claude Opus 4.8 does top the board (71.6), so the frontier *can* lead, but most models don't follow that pattern. **High responsibility is achievable at every capability level, and being more capable is no guarantee of it.** (An earlier pipeline artifact had Opus scoring lowest, now corrected; see the methodology change log.)
 
-### The board — closed and open, every capability tier
+### The board, closed and open, every capability tier
 
 | # | Model | RAI | |
 |---|-------|----:|---|
@@ -33,26 +33,26 @@ Claude Opus 4.8 does top the board (71.6) — so the frontier *can* lead — but
 | 16 | **MiniMax-M2.7** | 58.5 | open |
 | 17 | **gpt-oss-120B** | 54.8 | open |
 
-† GPT-5.5 is reasoning-locked — its MCQ benchmarks run at temperature 1 (sampled), so treat its score as approximate. See Methodology → Reasoning-locked models.
+† GPT-5.5 is reasoning-locked. Its MCQ benchmarks run at temperature 1 (sampled), so treat its score as approximate. See Methodology, Reasoning-locked models.
 
-**The whole board spans just ~17 points (54.8–71.6) while capability spans 5×.** The top cluster (≈68–72) mixes the most and least capable models — Qwen (open, mid-cap) and GPT-4o (low-cap) sit right alongside Opus (frontier).
+**The whole board spans just ~17 points (54.8 to 71.6) while capability spans 5×.** The top cluster (≈68 to 72) mixes the most and least capable models. Qwen (open, mid-cap) and GPT-4o (low-cap) sit right alongside Opus (frontier).
 
 ### Open weights are competitive on responsibility
 
-**8 of the 17 models are open-weight — and one (Qwen3-235B) is #2 overall.** Open models appear at every level of the board, ahead of many closed frontier systems. Responsibility is not a closed-model advantage.
+**8 of the 17 models are open-weight, and one (Qwen3-235B) is #2 overall.** Open models appear at every level of the board, ahead of many closed frontier systems. Responsibility is not a closed-model advantage.
 
 ### Capability doesn't track responsibility within a lab either
 
-**GPT-4o (69.2) outscores the newer, more capable GPT-5.2 (64.2)**, and GPT-5.5 — OpenAI's most capable — carries the most hazardous knowledge of any model here. Within a single developer, more advanced ≠ more responsible.
+**GPT-4o (69.2) outscores the newer, more capable GPT-5.2 (64.2)**, and GPT-5.5, OpenAI's most capable, carries the most hazardous knowledge of any model here. Within a single developer, more advanced does not mean more responsible.
 
 ### The reporting gap this fills
 
-Frontier developers report capability benchmarks almost universally but Responsible-AI benchmarks rarely (see **The Gap**). Raidex runs all 8 independently — none of these numbers are self-reported.
+Frontier developers report capability benchmarks almost universally but Responsible-AI benchmarks rarely (see **The Gap**). Raidex runs all 8 independently. None of these numbers are self-reported.
 
 ### Read this as a defined index, with error bars
 
-- **The correlation is weak, non-significant, and was volatile as the board filled** — r moved 0.13 → 0.29 → 0.17 as models landed (bootstrap 95% CI [−0.40, 0.58]; the sign isn't even reliably positive — P(r>0) ≈ 76%). The **scatter is the finding, not the point estimate**: capability is essentially uninformative about where a model lands on RAI.
-- **Sampled** (≈150–300 items/task): the composite's 95% half-width is ~±2 points, so differences inside the top cluster are ties. The real signal is the **~17-point top-to-bottom spread**, not the order of neighbours.
-- **Generative MCQ scoring is validated** against the canonical loglikelihood method (within ~3–6 points; see Methodology → Calibration).
+- **The correlation is weak, non-significant, and was volatile as the board filled.** r moved 0.13 to 0.29 to 0.17 as models landed (bootstrap 95% CI [−0.40, 0.58]; the sign isn't even reliably positive, with P(r>0) ≈ 76%). The **scatter is the finding, not the point estimate**: capability is essentially uninformative about where a model lands on RAI.
+- **Sampled** (≈150 to 300 items/task): the composite's 95% half-width is ~±2 points, so differences inside the top cluster are ties. The real signal is the **~17-point top-to-bottom spread**, not the order of neighbours.
+- **Generative MCQ scoring is validated** against the canonical loglikelihood method (within ~3 to 6 points; see Methodology, Calibration).
 - **Reasoning-locked models** (GPT-5.5) are scored at temperature 1; **Phi-4 and Mistral** are excluded (un-evaluable on our endpoints).
-- The RAI Score is an **unweighted, defined index** across 7 dimensions — built for relative comparison, not an absolute safety certificate. WMDP (security) penalizes hazardous knowledge, so a very knowledgeable model scores lower there.
+- The RAI Score is an **unweighted, defined index** across 7 dimensions, built for relative comparison, not an absolute safety certificate. WMDP (security) penalizes hazardous knowledge, so a very knowledgeable model scores lower there.
