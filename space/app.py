@@ -603,7 +603,10 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(refresh, "interval", seconds=1800)
     scheduler.start()
-    # SSR left at HF's default: disabling it (ssr_mode=False) stopped HF from promoting/serving
-    # the new build (HF's infra expects the SSR worker). The render loop is fixed by removing
-    # app.load above — no per-render fetch — which holds regardless of SSR (module loads once).
-    app.queue(default_concurrency_limit=40).launch()
+    # ssr_mode=False: gradio's SSR (default on HF for 5.x/6.x) leaves the Space stuck at
+    # APP_STARTING forever — it serves on the direct *.hf.space URL but never reaches RUNNING,
+    # so the embedded Space page shows "Starting..." indefinitely. Single-process gradio 5.x is
+    # HF's classic, well-routed setup and reaches RUNNING. (An earlier ssr-off attempt looked
+    # like it "broke serving" — that was the app.load download loop blocking promotion, now
+    # removed above; the module loads once at startup, so no re-download loop here.)
+    app.queue(default_concurrency_limit=40).launch(ssr_mode=False)
