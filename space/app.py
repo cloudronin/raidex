@@ -303,21 +303,42 @@ def build_capability_vs_rai_scatter():
         return _empty_fig("Capability vs RAI Score")
     xs = [p[1] for p in pts]
     ys = [p[2] for p in pts]
+    n = len(pts)
+    # Trim long ids so labels are narrower (fewer collisions).
+    def _short(nm):
+        return (nm.replace("Meta-Llama-3.3-70B-Instruct", "Llama-3.3-70B")
+                  .replace("Qwen3-235B-A22B-Instruct-2507", "Qwen3-235B")
+                  .replace("-20251001", ""))
+    # De-collide labels: place each point's text on a side not already taken by a nearby
+    # point, so clustered labels (gpt-4o / gemini / llama, etc.) don't stack on top center.
+    xr = (max(xs) - min(xs)) or 1.0
+    yr = (max(ys) - min(ys)) or 1.0
+    _POS = ["top center", "bottom center", "middle right", "middle left"]
+    pos_by_i, placed = {}, []
+    for i in sorted(range(n), key=lambda k: (-ys[k], xs[k])):
+        pick = _POS[0]
+        for cand in _POS:
+            if not any(cand == pp and abs(xs[i] - px) / xr < 0.13 and abs(ys[i] - py) / yr < 0.10
+                       for px, py, pp in placed):
+                pick = cand
+                break
+        pos_by_i[i] = pick
+        placed.append((xs[i], ys[i], pick))
     # Colour by weight availability so the "open models are competitive" finding is visible.
-    # Open-weight families in the roster: Llama, DeepSeek, Qwen, Gemma, gpt-oss.
     _OPEN = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo",
              "minimax", "phi")
-    def _is_open(n):
-        return any(k in n.lower() for k in _OPEN)
+    def _is_open(nm):
+        return any(k in nm.lower() for k in _OPEN)
     fig = go.Figure()
-    for label, color, members in [
-            ("Closed-weight", "#4f46e5", [p for p in pts if not _is_open(p[0])]),
-            ("Open-weight", "#ea580c", [p for p in pts if _is_open(p[0])])]:
-        if members:
+    for label, color, idxs in [
+            ("Closed-weight", "#4f46e5", [i for i in range(n) if not _is_open(pts[i][0])]),
+            ("Open-weight", "#ea580c", [i for i in range(n) if _is_open(pts[i][0])])]:
+        if idxs:
             fig.add_trace(go.Scatter(
-                x=[p[1] for p in members], y=[p[2] for p in members],
-                mode="markers+text", text=[p[0] for p in members], textposition="top center",
-                name=label, marker=dict(size=14, color=color)))
+                x=[xs[i] for i in idxs], y=[ys[i] for i in idxs],
+                mode="markers+text", text=[_short(pts[i][0]) for i in idxs],
+                textposition=[pos_by_i[i] for i in idxs], textfont=dict(size=11),
+                name=label, marker=dict(size=13, color=color)))
     rtxt = ""
     if len(pts) >= 3 and len(set(xs)) > 1:
         import numpy as np
