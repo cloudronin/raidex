@@ -591,7 +591,11 @@ with gr.Blocks(title="Raidex") as app:
     refresh_btn.click(refresh_all, None, _refresh_outs)
     s_btn.click(submit_eval, [s_model, s_tier], s_msg).then(
         lambda: (get_pending(), get_completed()), None, [pending_tbl, completed_tbl])
-    app.load(refresh_all, None, _refresh_outs)
+    # NO app.load(refresh_all) here on purpose: it re-ran load_results()/snapshot_download on
+    # EVERY (SSR) render, and under HF's SSR worker that re-downloaded the dataset on every
+    # request — a loop that pinned the app and failed its health check (stuck restarting).
+    # Every component already initialises from the startup LEADERBOARD; freshness comes from
+    # the 🔄 Refresh button and the 30-min scheduler.
 
 
 if __name__ == "__main__":
@@ -599,4 +603,6 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(refresh, "interval", seconds=1800)
     scheduler.start()
-    app.queue(default_concurrency_limit=40).launch()
+    # ssr_mode=False keeps the app a single Python process (no SSR worker re-importing the
+    # module / bypassing the snapshot cache) — part of the fix for the re-download/restart loop.
+    app.queue(default_concurrency_limit=40).launch(ssr_mode=False)

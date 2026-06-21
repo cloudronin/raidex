@@ -1,4 +1,4 @@
-_2026-06 re-run — 17 frontier models scored (16 on all 8 benchmarks; MiniMax-M2.7 on 7, after an lm-eval crash on ETHICS). Mistral Large and Phi-4 are excluded (un-evaluable on our endpoints). Every number is an independent automated evaluation, not a self-reported score._
+_2026-06 re-run — 17 frontier models scored on all 8 benchmarks. Mistral Large and Phi-4 are excluded (un-evaluable on our endpoints). Every number is an independent automated evaluation, not a self-reported score._
 
 ### Capability barely predicts responsibility
 
@@ -30,10 +30,10 @@ Claude Opus 4.8 does top the board (71.6) — so the frontier *can* lead — but
 | 13 | **Gemma-3 27B** | 62.4 | open |
 | 14 | Claude Haiku 4.5 | 62.2 | |
 | 15 | Grok 4.3 | 61.3 | |
-| 16 | **MiniMax-M2.7** ‡ | 58.8 | open |
+| 16 | **MiniMax-M2.7** | 58.5 | open |
 | 17 | **gpt-oss-120B** | 54.8 | open |
 
-† GPT-5.5 is reasoning-locked — its MCQ benchmarks run at temperature 1 (sampled), so treat its score as approximate. ‡ MiniMax scored on 7/8 (an lm-eval crash on ETHICS). See Methodology → Reasoning-locked models.
+† GPT-5.5 is reasoning-locked — its MCQ benchmarks run at temperature 1 (sampled), so treat its score as approximate. See Methodology → Reasoning-locked models.
 
 **The whole board spans just ~17 points (54.8–71.6) while capability spans 5×.** The top cluster (≈68–72) mixes the most and least capable models — Qwen (open, mid-cap) and GPT-4o (low-cap) sit right alongside Opus (frontier).
 
@@ -54,5 +54,5 @@ Frontier developers report capability benchmarks almost universally but Responsi
 - **The correlation is weak, non-significant, and was volatile as the board filled** — r moved 0.13 → 0.29 → 0.17 as models landed (bootstrap 95% CI [−0.40, 0.58]; the sign isn't even reliably positive — P(r>0) ≈ 76%). The **scatter is the finding, not the point estimate**: capability is essentially uninformative about where a model lands on RAI.
 - **Sampled** (≈150–300 items/task): the composite's 95% half-width is ~±2 points, so differences inside the top cluster are ties. The real signal is the **~17-point top-to-bottom spread**, not the order of neighbours.
 - **Generative MCQ scoring is validated** against the canonical loglikelihood method (within ~3–6 points; see Methodology → Calibration).
-- **Reasoning-locked models** (GPT-5.5) are scored at temperature 1; **MiniMax** is on 7/8; **Phi-4 and Mistral** are excluded (un-evaluable on our endpoints).
+- **Reasoning-locked models** (GPT-5.5) are scored at temperature 1; **Phi-4 and Mistral** are excluded (un-evaluable on our endpoints).
 - The RAI Score is an **unweighted, defined index** across 7 dimensions — built for relative comparison, not an absolute safety certificate. WMDP (security) penalizes hazardous knowledge, so a very knowledgeable model scores lower there.
