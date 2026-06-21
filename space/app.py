@@ -252,8 +252,13 @@ def model_choices():
 GREEN = [[0.0, "#0b3d2e"], [1.0, "#16a34a"]]
 RED = [[0.0, "#3d0b0b"], [1.0, "#dc2626"]]
 _FONT = "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif"
+# Charts sit on a transparent background over the page, which can be light OR dark (gradio
+# follows the system theme). Use a mid-slate text + low-opacity gridlines that read on both —
+# a fixed dark text (#334155) was invisible in dark mode.
+_FG = "#94a3b8"
+_GRID = "rgba(148,163,184,0.25)"
 _LAYOUT = dict(autosize=True, height=560, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-               font=dict(size=14, family=_FONT, color="#334155"),
+               font=dict(size=14, family=_FONT, color=_FG),
                title_font=dict(size=16, family=_FONT), title_x=0.02, title_xanchor="left",
                margin=dict(l=160, r=110, t=72, b=120))
 
@@ -312,8 +317,9 @@ def build_radar(models):
         fig.add_trace(go.Scatterpolar(r=r + [r[0]],
                                       theta=[DIM_LABEL[d] for d in ACTIVE_DIMS] + [DIM_LABEL[ACTIVE_DIMS[0]]],
                                       fill="toself", name=m))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                      title="Per-dimension comparison", height=520)
+    fig.update_layout(polar=dict(bgcolor="rgba(0,0,0,0)", radialaxis=dict(visible=True, range=[0, 100])),
+                      title="Per-dimension comparison", height=520,
+                      paper_bgcolor="rgba(0,0,0,0)", font=dict(family=_FONT, color=_FG))
     return fig
 
 
@@ -395,12 +401,12 @@ def build_capability_vs_rai_scatter():
                       xaxis_title="Capability  (Artificial Analysis Intelligence Index, 2026-06-18)",
                       yaxis_title="RAI Score", height=560, autosize=True,
                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font=dict(size=14, family=_FONT, color="#334155"),
+                      font=dict(size=14, family=_FONT, color=_FG),
                       title_font=dict(size=18, family=_FONT), title_x=0.0, title_xanchor="left",
                       legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="left", x=0),
                       margin=dict(l=70, r=60, t=92, b=120))
-    fig.update_xaxes(gridcolor="#eef2f7", zeroline=False)
-    fig.update_yaxes(gridcolor="#eef2f7", zeroline=False)
+    fig.update_xaxes(gridcolor=_GRID, zeroline=False)
+    fig.update_yaxes(gridcolor=_GRID, zeroline=False)
     # Short coverage note, dropped well below the x-axis title to avoid overlapping it.
     fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored · RAI is live from the leaderboard",
                        xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
@@ -422,8 +428,9 @@ def build_model_radar(model: str):
     mean = [0 if pd.isna(x) else x for x in mean]
     fig.add_trace(go.Scatterpolar(r=r + [r[0]], theta=theta + [theta[0]], fill="toself", name=model))
     fig.add_trace(go.Scatterpolar(r=mean + [mean[0]], theta=theta + [theta[0]], name="Roster mean"))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), height=480,
-                      title=f"{model} vs roster mean")
+    fig.update_layout(polar=dict(bgcolor="rgba(0,0,0,0)", radialaxis=dict(visible=True, range=[0, 100])),
+                      height=480, title=f"{model} vs roster mean",
+                      paper_bgcolor="rgba(0,0,0,0)", font=dict(family=_FONT, color=_FG))
     return fig
 
 
