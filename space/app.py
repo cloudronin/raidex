@@ -522,14 +522,17 @@ CSS = """
 
 
 def _hero_stats_html():
-    """Live RAI spread for the hero; the capability-range figure mirrors the authored finding
-    in findings.md ("capability spans 5x"), kept consistent rather than recomputed. Display
-    only: never written back to the data the integrity gate reads."""
+    """Live RAI spread and capability range for the hero, both derived from LEADERBOARD and
+    CAP_SCORES (the range is max/min capability, currently about twelvefold). Display only:
+    never written back to the data the integrity gate reads."""
     rai = (LEADERBOARD["RAI Score"].dropna()
            if LEADERBOARD is not None and not LEADERBOARD.empty else pd.Series(dtype=float))
     spread = (rai.max() - rai.min()) if not rai.empty else 0
-    s1 = (f"<span class='stat'><b>{spread:.0f}-point</b> RAI spread vs a <b>5&times;</b> capability range</span>"
-          if spread else "")
+    caps = [CAP_SCORES[m] for m in (list(LEADERBOARD["Model"])
+            if LEADERBOARD is not None and not LEADERBOARD.empty else []) if m in CAP_SCORES]
+    ratio = (max(caps) / min(caps)) if caps and min(caps) > 0 else 0
+    rng = f" vs a <b>{ratio:.0f}&times;</b> capability range" if ratio >= 2 else ""
+    s1 = (f"<span class='stat'><b>{spread:.0f}-point</b> RAI spread{rng}</span>" if spread else "")
     return ("<div class='hero-stats'>" + s1
             + "<span class='stat'>capability barely predicts RAI (<b>r &asymp; 0.17</b>)</span>"
             + "<span class='stat'><b>#2 overall</b> is open-weight</span></div>")

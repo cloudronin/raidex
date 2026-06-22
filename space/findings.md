@@ -6,7 +6,7 @@ Across the 17 models, capability (Artificial Analysis Intelligence Index) explai
 
 - **Qwen3-235B**, open-weight and only mid-capability, **is #2** on responsibility, above every closed frontier model except Opus.
 - **GPT-4o and Gemini 2.5 Flash**, among the *least* capable models here, tie for 3rd.
-- The 2nd-most-capable model, **GPT-5.5**, lands mid-pack and posts the board's **worst hazardous-knowledge (WMDP)** score.
+- The 2nd-most-capable model, **GPT-5.5**, lands mid-pack and posts the board's **second-worst hazardous-knowledge (WMDP)** score, behind only Grok 4.3.
 - **MiniMax-M2.7** (capable) sits near the bottom.
 
 Claude Opus 4.8 does top the board (71.6), so the frontier *can* lead, but most models don't follow that pattern. **High responsibility is achievable at every capability level, and being more capable is no guarantee of it.** (An earlier pipeline artifact had Opus scoring lowest, now corrected; see the methodology change log.)
@@ -35,7 +35,7 @@ Claude Opus 4.8 does top the board (71.6), so the frontier *can* lead, but most 
 
 † GPT-5.5 is reasoning-locked. Its MCQ benchmarks run at temperature 1 (sampled), so treat its score as approximate. See Methodology, Reasoning-locked models.
 
-**The whole board spans just ~17 points (54.8 to 71.6) while capability spans 5×.** The top cluster (≈68 to 72) mixes the most and least capable models. Qwen (open, mid-cap) and GPT-4o (low-cap) sit right alongside Opus (frontier).
+**The whole board spans just ~17 points (54.8 to 71.6) while capability spans roughly twelvefold.** The top cluster (≈68 to 72) mixes the most and least capable models. Qwen (open, mid-cap) and GPT-4o (low-cap) sit right alongside Opus (frontier).
 
 ### Open weights are competitive on responsibility
 
@@ -43,7 +43,7 @@ Claude Opus 4.8 does top the board (71.6), so the frontier *can* lead, but most 
 
 ### Capability doesn't track responsibility within a lab either
 
-**GPT-4o (69.2) outscores the newer, more capable GPT-5.2 (64.2)**, and GPT-5.5, OpenAI's most capable, carries the most hazardous knowledge of any model here. Within a single developer, more advanced does not mean more responsible.
+**GPT-4o (69.2) outscores the newer, more capable GPT-5.2 (64.2)**, and GPT-5.5, OpenAI's most capable, carries the most hazardous knowledge of any OpenAI model here (and the second-most on the board, after Grok 4.3). Within a single developer, more advanced does not mean more responsible.
 
 ### The reporting gap this fills
 
@@ -51,7 +51,7 @@ Frontier developers report capability benchmarks almost universally but Responsi
 
 ### Read this as a defined index, with error bars
 
-- **The correlation is weak, non-significant, and was volatile as the board filled.** r moved 0.13 to 0.29 to 0.17 as models landed (bootstrap 95% CI [−0.40, 0.58]; the sign isn't even reliably positive, with P(r>0) ≈ 76%). The **scatter is the finding, not the point estimate**: capability is essentially uninformative about where a model lands on RAI.
+- **The correlation is weak, non-significant, and was volatile as the board filled.** r moved 0.13 to 0.29 to 0.17 as models landed (bootstrap 95% CI [−0.40, 0.58]; the sign isn't even reliably positive, with P(r>0) ≈ 74%). The **scatter is the finding, not the point estimate**: capability is essentially uninformative about where a model lands on RAI.
 - **Sampled** (≈150 to 300 items/task): the composite's 95% half-width is ~±2 points, so differences inside the top cluster are ties. The real signal is the **~17-point top-to-bottom spread**, not the order of neighbours.
 - **Generative MCQ scoring is validated** against the canonical loglikelihood method (within ~3 to 6 points; see Methodology, Calibration).
 - **Reasoning-locked models** (GPT-5.5) are scored at temperature 1; **Phi-4 and Mistral** are excluded (un-evaluable on our endpoints).
