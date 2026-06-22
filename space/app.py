@@ -545,7 +545,7 @@ with gr.Blocks(title="Raidex", theme=THEME, css=CSS) as app:
                 "[raidex.ai](https://raidex.ai)")
 
     # ---- Hero: the finding and the scatter lead; the board is evidence, in the tab below ----
-    gr.Markdown("## Capability doesn't buy responsibility")
+    gr.Markdown("## Capability doesn't predict responsibility")
     gr.Markdown("_Every score is independently evaluated by Raidex, not self-reported._")
     gr.HTML(HERO_STATS)
     cap_scatter = gr.Plot(value=build_capability_vs_rai_scatter())
