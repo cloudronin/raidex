@@ -43,6 +43,8 @@ python runner.py --model anthropic/claude-opus-4-8 --tier A+B   # full run + upl
 python runner.py --poll                                         # drain the request queue
 ```
 
+**Reproducing the published board.** The leaderboard was produced by running the full 17-model roster at Tier A+B. `backend/rerun.py` runs the rate-limited batch with per-provider throttling and resume; the five always-greedy OpenAI/Anthropic models run via `runner.py`. See [`backend/README.md`](backend/README.md#reproducing-the-published-leaderboard) for the roster and provider routing, the exact keys, the reasoning-locked / WMDP-recovery / sampling / neutral-judge settings, the 2026-06-18 capability snapshot, and the generative-vs-loglikelihood calibration. Numbers reproduce within the stated error bars (composite 95% half-width ~±2 points), not bit-for-bit.
+
 ## Running the Space locally
 
 ```bash
