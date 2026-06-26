@@ -1,0 +1,7 @@
+benchmark,dimension,predicted,format_confounded,Llama-3.1-8B,Gemma-2-9B,Mistral-7B,mean_clean
+bbq,fairness_bias,post-training-bound,no,0.18,0.14,0.2,0.173
+ethics,machine_ethics,post-training-bound,no,0.185,0.22,0.1,0.168
+wmdp,security,pretraining-bound,no,-0.14,-0.033,0.053,-0.04
+strongreject,security,post-training-bound,yes,0.26,0.275,-0.505,
+xstest,safety,post-training-bound,yes,0.24,0.22,0.02,
+simpleqa,factuality,pretraining-bound,yes,-0.011,0.048,-0.023,

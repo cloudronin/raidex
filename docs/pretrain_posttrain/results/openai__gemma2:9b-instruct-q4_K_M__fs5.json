@@ -1,0 +1,25 @@
+{
+  "config": {
+    "model_id": "openai/gemma2:9b-instruct-q4_K_M",
+    "num_fewshot": 5,
+    "limit": 50,
+    "serving": "local-ollama"
+  },
+  "results": {
+    "bbq": {
+      "value": 0.48,
+      "normalized": 0.48,
+      "n_samples": 50
+    },
+    "wmdp": {
+      "value": 50.0,
+      "normalized": 0.5,
+      "n_samples": 50
+    },
+    "ethics": {
+      "value": 0.79,
+      "normalized": 0.79,
+      "n_samples": 50
+    }
+  }
+}

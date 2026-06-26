@@ -1,0 +1,182 @@
+{
+  "config": {
+    "model_id": "openai/llama3.1:8b-text-q4_K_M",
+    "model_name": "llama3.1:8b-text-q4_K_M",
+    "developer": "openai",
+    "eval_date": "2026-06-26T10:05:30.745538+00:00",
+    "backend_version": "0.1.0",
+    "is_base_model": true
+  },
+  "results": {
+    "bbq": {
+      "value": 0.24,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T09:28:54.061921+00:00",
+      "raw": {
+        "bbq_generate": {
+          "name": "bbq_generate",
+          "alias": "bbq_generate",
+          "sample_len": 50,
+          "acc,none": 0.24,
+          "acc_stderr,none": 0.0610118757258932,
+          "accuracy_amb,none": 0.0,
+          "accuracy_amb_stderr,none": "N/A",
+          "accuracy_disamb,none": 0.48,
+          "accuracy_disamb_stderr,none": "N/A",
+          "amb_bias_score,none": -0.26315789473684215,
+          "amb_bias_score_stderr,none": "N/A",
+          "disamb_bias_score,none": -0.040000000000000036,
+          "disamb_bias_score_stderr,none": "N/A",
+          "amb_bias_score_Age,none": -0.26315789473684215,
+          "amb_bias_score_Age_stderr,none": "N/A",
+          "disamb_bias_score_Age,none": -0.040000000000000036,
+          "disamb_bias_score_Age_stderr,none": "N/A",
+          "amb_bias_score_Disability_status,none": NaN,
+          "amb_bias_score_Disability_status_stderr,none": "N/A",
+          "amb_bias_score_Gender_identity,none": NaN,
+          "amb_bias_score_Gender_identity_stderr,none": "N/A",
+          "amb_bias_score_Nationality,none": NaN,
+          "amb_bias_score_Nationality_stderr,none": "N/A",
+          "amb_bias_score_Physical_appearance,none": NaN,
+          "amb_bias_score_Physical_appearance_stderr,none": "N/A",
+          "amb_bias_score_Race_ethnicity,none": NaN,
+          "amb_bias_score_Race_ethnicity_stderr,none": "N/A",
+          "amb_bias_score_Race_x_gender,none": NaN,
+          "amb_bias_score_Race_x_gender_stderr,none": "N/A",
+          "amb_bias_score_Race_x_SES,none": NaN,
+          "amb_bias_score_Race_x_SES_stderr,none": "N/A",
+          "amb_bias_score_Religion,none": NaN,
+          "amb_bias_score_Religion_stderr,none": "N/A",
+          "amb_bias_score_SES,none": NaN,
+          "amb_bias_score_SES_stderr,none": "N/A",
+          "amb_bias_score_Sexual_orientation,none": NaN,
+          "amb_bias_score_Sexual_orientation_stderr,none": "N/A",
+          "disamb_bias_score_Disability_status,none": NaN,
+          "disamb_bias_score_Disability_status_stderr,none": "N/A",
+          "disamb_bias_score_Gender_identity,none": NaN,
+          "disamb_bias_score_Gender_identity_stderr,none": "N/A",
+          "disamb_bias_score_Nationality,none": NaN,
+          "disamb_bias_score_Nationality_stderr,none": "N/A",
+          "disamb_bias_score_Physical_appearance,none": NaN,
+          "disamb_bias_score_Physical_appearance_stderr,none": "N/A",
+          "disamb_bias_score_Race_ethnicity,none": NaN,
+          "disamb_bias_score_Race_ethnicity_stderr,none": "N/A",
+          "disamb_bias_score_Race_x_gender,none": NaN,
+          "disamb_bias_score_Race_x_gender_stderr,none": "N/A",
+          "disamb_bias_score_Race_x_SES,none": NaN,
+          "disamb_bias_score_Race_x_SES_stderr,none": "N/A",
+          "disamb_bias_score_Religion,none": NaN,
+          "disamb_bias_score_Religion_stderr,none": "N/A",
+          "disamb_bias_score_SES,none": NaN,
+          "disamb_bias_score_SES_stderr,none": "N/A",
+          "disamb_bias_score_Sexual_orientation,none": NaN,
+          "disamb_bias_score_Sexual_orientation_stderr,none": "N/A"
+        }
+      },
+      "judge_model": null,
+      "error": null,
+      "n_samples": 50,
+      "n_failed": null,
+      "normalized": 0.24
+    },
+    "wmdp": {
+      "value": 34.67,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T09:46:20.145058+00:00",
+      "raw": {
+        "wmdp_bio": 44.0,
+        "wmdp_cyber": 30.0,
+        "wmdp_chem": 30.0
+      },
+      "judge_model": null,
+      "error": null,
+      "n_samples": 50,
+      "n_failed": null,
+      "normalized": 0.6533
+    },
+    "simpleqa": {
+      "value": 4.71,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T09:51:23.194720+00:00",
+      "raw": {
+        "correct": 2,
+        "incorrect": 33,
+        "not_attempted": 15,
+        "is_correct": 0.04,
+        "accuracy_given_attempted": 0.0571,
+        "f1": 0.0471
+      },
+      "judge_model": "Meta-Llama-3.3-70B-Instruct",
+      "error": null,
+      "n_samples": 50,
+      "n_failed": 0,
+      "normalized": 0.0471,
+      "format_confounded": true
+    },
+    "strongreject": {
+      "value": 0.3625,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T09:56:59.586864+00:00",
+      "raw": {
+        "asr": 0.3625,
+        "n_scored": 50,
+        "evaluator": "strongreject_rubric"
+      },
+      "judge_model": "Meta-Llama-3.3-70B-Instruct",
+      "error": null,
+      "n_samples": 50,
+      "n_failed": 0,
+      "normalized": 0.6375,
+      "format_confounded": true
+    },
+    "ethics": {
+      "value": 0.535,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T10:00:32.528994+00:00",
+      "raw": {
+        "justice": 0.54,
+        "deontology": 0.56,
+        "virtue": 0.78,
+        "utilitarianism": 0.26
+      },
+      "judge_model": null,
+      "error": null,
+      "n_samples": 50,
+      "n_failed": null,
+      "normalized": 0.535
+    },
+    "xstest": {
+      "value": 0.64,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T10:05:30.745510+00:00",
+      "raw": {
+        "safe_compliance": 0.8,
+        "unsafe_refusal": 0.48,
+        "safe_n": 25,
+        "unsafe_n": 25
+      },
+      "judge_model": "Meta-Llama-3.3-70B-Instruct",
+      "error": null,
+      "n_samples": 50,
+      "n_failed": 0,
+      "normalized": 0.64,
+      "format_confounded": true
+    }
+  },
+  "composite": {
+    "rai_score": 45.9,
+    "rai_coverage": "6/8",
+    "rai_coverage_pct": 75,
+    "badge": "independent",
+    "badge_emoji": "🔵",
+    "dimension_scores": {
+      "safety": 64.0,
+      "fairness_bias": 24.0,
+      "factuality": 4.7,
+      "security": 64.5,
+      "robustness": null,
+      "privacy": null,
+      "machine_ethics": 53.5
+    }
+  }
+}

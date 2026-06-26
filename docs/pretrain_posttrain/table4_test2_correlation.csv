@@ -1,0 +1,9 @@
+benchmark,dimension,expected_type,inverted,pearson_r,ci_lo,ci_hi,n_models
+advglue,robustness,ambiguous,False,0.111,-0.413,0.717,17
+bbq,fairness_bias,post-training-bound,False,-0.142,-0.56,0.272,17
+confaide,privacy,ambiguous,False,0.04,-0.401,0.556,17
+ethics,machine_ethics,post-training-bound,False,0.082,-0.313,0.436,17
+simpleqa,factuality,pretraining-bound,False,0.555,0.084,0.834,17
+strongreject,security,post-training-bound,True,0.125,-0.418,0.553,17
+wmdp,security,pretraining-bound,True,-0.251,-0.644,0.33,17
+xstest,safety,post-training-bound,False,-0.329,-0.628,-0.005,17

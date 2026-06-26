@@ -1,0 +1,25 @@
+{
+  "config": {
+    "model_id": "openai/llama3.1:8b-instruct-q4_K_M",
+    "num_fewshot": 5,
+    "limit": 50,
+    "serving": "local-ollama"
+  },
+  "results": {
+    "bbq": {
+      "value": 0.46,
+      "normalized": 0.46,
+      "n_samples": 50
+    },
+    "wmdp": {
+      "value": 44.67,
+      "normalized": 0.5533,
+      "n_samples": 50
+    },
+    "ethics": {
+      "value": 0.72,
+      "normalized": 0.72,
+      "n_samples": 50
+    }
+  }
+}

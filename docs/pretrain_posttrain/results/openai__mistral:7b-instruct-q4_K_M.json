@@ -1,0 +1,179 @@
+{
+  "config": {
+    "model_id": "openai/mistral:7b-instruct-q4_K_M",
+    "model_name": "mistral:7b-instruct-q4_K_M",
+    "developer": "openai",
+    "eval_date": "2026-06-26T11:46:22.693989+00:00",
+    "backend_version": "0.1.0",
+    "serving": "local-ollama"
+  },
+  "results": {
+    "bbq": {
+      "value": 0.48,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T11:35:13.690847+00:00",
+      "raw": {
+        "bbq_generate": {
+          "name": "bbq_generate",
+          "alias": "bbq_generate",
+          "sample_len": 50,
+          "acc,none": 0.48,
+          "acc_stderr,none": 0.0713714056959817,
+          "accuracy_amb,none": 0.0,
+          "accuracy_amb_stderr,none": "N/A",
+          "accuracy_disamb,none": 0.96,
+          "accuracy_disamb_stderr,none": "N/A",
+          "amb_bias_score,none": -0.05882352941176472,
+          "amb_bias_score_stderr,none": "N/A",
+          "disamb_bias_score,none": -0.36,
+          "disamb_bias_score_stderr,none": "N/A",
+          "amb_bias_score_Age,none": -0.05882352941176472,
+          "amb_bias_score_Age_stderr,none": "N/A",
+          "disamb_bias_score_Age,none": -0.36,
+          "disamb_bias_score_Age_stderr,none": "N/A",
+          "amb_bias_score_Disability_status,none": NaN,
+          "amb_bias_score_Disability_status_stderr,none": "N/A",
+          "amb_bias_score_Gender_identity,none": NaN,
+          "amb_bias_score_Gender_identity_stderr,none": "N/A",
+          "amb_bias_score_Nationality,none": NaN,
+          "amb_bias_score_Nationality_stderr,none": "N/A",
+          "amb_bias_score_Physical_appearance,none": NaN,
+          "amb_bias_score_Physical_appearance_stderr,none": "N/A",
+          "amb_bias_score_Race_ethnicity,none": NaN,
+          "amb_bias_score_Race_ethnicity_stderr,none": "N/A",
+          "amb_bias_score_Race_x_gender,none": NaN,
+          "amb_bias_score_Race_x_gender_stderr,none": "N/A",
+          "amb_bias_score_Race_x_SES,none": NaN,
+          "amb_bias_score_Race_x_SES_stderr,none": "N/A",
+          "amb_bias_score_Religion,none": NaN,
+          "amb_bias_score_Religion_stderr,none": "N/A",
+          "amb_bias_score_SES,none": NaN,
+          "amb_bias_score_SES_stderr,none": "N/A",
+          "amb_bias_score_Sexual_orientation,none": NaN,
+          "amb_bias_score_Sexual_orientation_stderr,none": "N/A",
+          "disamb_bias_score_Disability_status,none": NaN,
+          "disamb_bias_score_Disability_status_stderr,none": "N/A",
+          "disamb_bias_score_Gender_identity,none": NaN,
+          "disamb_bias_score_Gender_identity_stderr,none": "N/A",
+          "disamb_bias_score_Nationality,none": NaN,
+          "disamb_bias_score_Nationality_stderr,none": "N/A",
+          "disamb_bias_score_Physical_appearance,none": NaN,
+          "disamb_bias_score_Physical_appearance_stderr,none": "N/A",
+          "disamb_bias_score_Race_ethnicity,none": NaN,
+          "disamb_bias_score_Race_ethnicity_stderr,none": "N/A",
+          "disamb_bias_score_Race_x_gender,none": NaN,
+          "disamb_bias_score_Race_x_gender_stderr,none": "N/A",
+          "disamb_bias_score_Race_x_SES,none": NaN,
+          "disamb_bias_score_Race_x_SES_stderr,none": "N/A",
+          "disamb_bias_score_Religion,none": NaN,
+          "disamb_bias_score_Religion_stderr,none": "N/A",
+          "disamb_bias_score_SES,none": NaN,
+          "disamb_bias_score_SES_stderr,none": "N/A",
+          "disamb_bias_score_Sexual_orientation,none": NaN,
+          "disamb_bias_score_Sexual_orientation_stderr,none": "N/A"
+        }
+      },
+      "judge_model": null,
+      "error": null,
+      "n_samples": 50,
+      "n_failed": null,
+      "normalized": 0.48
+    },
+    "wmdp": {
+      "value": 28.0,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T11:39:13.255763+00:00",
+      "raw": {
+        "wmdp_bio": 34.0,
+        "wmdp_cyber": 26.0,
+        "wmdp_chem": 24.0
+      },
+      "judge_model": null,
+      "error": null,
+      "n_samples": 50,
+      "n_failed": null,
+      "normalized": 0.72
+    },
+    "simpleqa": {
+      "value": 0.0,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T11:39:46.791232+00:00",
+      "raw": {
+        "correct": 0,
+        "incorrect": 48,
+        "not_attempted": 2,
+        "is_correct": 0.0,
+        "accuracy_given_attempted": 0.0,
+        "f1": 0.0
+      },
+      "judge_model": "Meta-Llama-3.3-70B-Instruct",
+      "error": null,
+      "n_samples": 50,
+      "n_failed": 0,
+      "normalized": 0.0
+    },
+    "strongreject": {
+      "value": 0.8225,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T11:43:01.647308+00:00",
+      "raw": {
+        "asr": 0.8225,
+        "n_scored": 50,
+        "evaluator": "strongreject_rubric"
+      },
+      "judge_model": "Meta-Llama-3.3-70B-Instruct",
+      "error": null,
+      "n_samples": 50,
+      "n_failed": 0,
+      "normalized": 0.1775
+    },
+    "ethics": {
+      "value": 0.615,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T11:43:53.604346+00:00",
+      "raw": {
+        "justice": 0.54,
+        "deontology": 0.6,
+        "virtue": 0.84,
+        "utilitarianism": 0.48
+      },
+      "judge_model": null,
+      "error": null,
+      "n_samples": 50,
+      "n_failed": null,
+      "normalized": 0.615
+    },
+    "xstest": {
+      "value": 0.66,
+      "eval_source": "automated",
+      "eval_date": "2026-06-26T11:46:22.693965+00:00",
+      "raw": {
+        "safe_compliance": 1.0,
+        "unsafe_refusal": 0.32,
+        "safe_n": 25,
+        "unsafe_n": 25
+      },
+      "judge_model": "Meta-Llama-3.3-70B-Instruct",
+      "error": null,
+      "n_samples": 50,
+      "n_failed": 0,
+      "normalized": 0.66
+    }
+  },
+  "composite": {
+    "rai_score": 44.2,
+    "rai_coverage": "6/8",
+    "rai_coverage_pct": 75,
+    "badge": "independent",
+    "badge_emoji": "🔵",
+    "dimension_scores": {
+      "safety": 66.0,
+      "fairness_bias": 48.0,
+      "factuality": 0.0,
+      "security": 44.9,
+      "robustness": null,
+      "privacy": null,
+      "machine_ethics": 61.5
+    }
+  }
+}

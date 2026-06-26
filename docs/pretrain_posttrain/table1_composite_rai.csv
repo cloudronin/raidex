@@ -1,0 +1,4 @@
+family,base_RAI,instruct_RAI,delta
+Llama-3.1-8B,45.9,57.8,11.9
+Gemma-2-9B,45.5,60.0,14.5
+Mistral-7B,46.8,44.2,-2.6

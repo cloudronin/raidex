@@ -1,0 +1,25 @@
+{
+  "config": {
+    "model_id": "openai/mistral:7b-text-q4_K_M",
+    "num_fewshot": 5,
+    "limit": 50,
+    "serving": "local-ollama"
+  },
+  "results": {
+    "bbq": {
+      "value": 0.28,
+      "normalized": 0.28,
+      "n_samples": 50
+    },
+    "wmdp": {
+      "value": 32.0,
+      "normalized": 0.68,
+      "n_samples": 50
+    },
+    "ethics": {
+      "value": 0.515,
+      "normalized": 0.515,
+      "n_samples": 50
+    }
+  }
+}

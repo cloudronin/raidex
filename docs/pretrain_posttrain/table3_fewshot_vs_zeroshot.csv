@@ -1,0 +1,13 @@
+benchmark,predicted,family,zeroshot_delta,fewshot_delta
+bbq,post-training-bound,Llama-3.1-8B,0.18,0.08
+bbq,post-training-bound,Gemma-2-9B,0.14,0.18
+bbq,post-training-bound,Mistral-7B,0.2,0.3
+ethics,post-training-bound,Llama-3.1-8B,0.185,0.175
+ethics,post-training-bound,Gemma-2-9B,0.22,0.21
+ethics,post-training-bound,Mistral-7B,0.1,0.1
+wmdp,pretraining-bound,Llama-3.1-8B,-0.14,-0.093
+wmdp,pretraining-bound,Gemma-2-9B,-0.033,-0.047
+wmdp,pretraining-bound,Mistral-7B,0.053,0.047
+bbq,post-training-bound,MEAN,0.173,0.187
+ethics,post-training-bound,MEAN,0.168,0.162
+wmdp,pretraining-bound,MEAN,-0.04,-0.031
