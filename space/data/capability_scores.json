@@ -1,8 +1,8 @@
 {
   "_metric": "Artificial Analysis Intelligence Index",
-  "_snapshot": "2026-06-18",
+  "_snapshot": "2026-06-18 base; 2026-07-08 (AA Intelligence Index v4.1) for the 2026-07 roster-refresh additions — same scale, established models unchanged to the decimal",
   "_source": "https://artificialanalysis.ai/evaluations/artificial-analysis-intelligence-index (snapshot via benchlm.ai aggregation)",
-  "_note": "Single-number capability aggregate (a normalized mean of capability benchmarks — built the same way as Raidex's RAI Score). Keyed by Raidex model_name (the leaderboard 'Model' column). Models without a published score on this snapshot's index version are omitted rather than mixed across versions: mistral-large-latest. Meta-Llama-3.3-70B-Instruct (AA ~14), claude-haiku-4-5-20251001 (AA 24) and Qwen3-235B-A22B-Instruct-2507 (AA 25) added from the artificialanalysis.ai model pages — all NON-reasoning index variants, matching the config Raidex evaluates (temperature 0, no extended-thinking budget; the reasoning variants score higher), consistent with this snapshot's gpt-4o~11 scale. Roster-widening open-weight batch (MiniMax-M2.7, gemma-4-31B-it, DeepSeek-V3.1, phi-4) read off the same benchlm snapshot to enrich the capability-vs-RAI scatter.",
+  "_note": "Single-number capability aggregate (a normalized mean of capability benchmarks — built the same way as Raidex's RAI Score). Keyed by Raidex model_name (the leaderboard 'Model' column). Models without a published score on this snapshot's index version are omitted rather than mixed across versions: mistral-large-latest. Meta-Llama-3.3-70B-Instruct (AA ~14), claude-haiku-4-5-20251001 (AA 24) and Qwen3-235B-A22B-Instruct-2507 (AA 25) added from the artificialanalysis.ai model pages — all NON-reasoning index variants, matching the config Raidex evaluates (temperature 0, no extended-thinking budget; the reasoning variants score higher), consistent with this snapshot's gpt-4o~11 scale. Roster-widening open-weight batch (MiniMax-M2.7, gemma-4-31B-it, DeepSeek-V3.1, phi-4) read off the same benchlm snapshot to enrich the capability-vs-RAI scatter. 2026-07 roster refresh added claude-fable-5 (60), claude-sonnet-5 (53.4), glm-5.2 (51.1), gemini-3.5-flash (50.2), deepseek-v4-pro (44), llama-4-maverick (14.3) from AA Intelligence Index v4.1 (~2026-07-08); v4.1 is the same scale as the 2026-06-18 pull (opus-4-8 55.7 in both), so they share one axis. Headline/max-effort variant per model, matching the existing flagship entries; llama-4-maverick is non-reasoning (14.3).",
   "scores": {
     "claude-opus-4-8": 55.7,
     "gpt-5.5": 54.8,
@@ -21,6 +21,12 @@
     "MiniMax-M2.7": 38.1,
     "gemma-4-31B-it": 29.4,
     "DeepSeek-V3.1": 21.1,
-    "phi-4": 4.9
+    "phi-4": 4.9,
+    "claude-fable-5": 60.0,
+    "claude-sonnet-5": 53.4,
+    "glm-5.2": 51.1,
+    "gemini-3.5-flash": 50.2,
+    "deepseek-v4-pro": 44.0,
+    "llama-4-maverick": 14.3
   }
 }

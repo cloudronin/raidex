@@ -391,14 +391,29 @@ def build_capability_vs_rai_scatter():
                                  line=dict(dash="dash", color="#9ca3af"), showlegend=False, hoverinfo="skip"))
         r = float(np.corrcoef(xs, ys)[0, 1])
         if r == r:
-            rtxt = f"Pearson r = {r:.2f}"
+            # Bootstrap 95% CI (2000 resamples, seeded) so a new r reads with its
+            # uncertainty — the scatter is the finding, not the point estimate.
+            ax, ay = np.asarray(xs), np.asarray(ys)
+            n = len(ax)
+            rng = np.random.default_rng(0)
+            boot = []
+            for _ in range(2000):
+                idx = rng.integers(0, n, n)
+                bx, by = ax[idx], ay[idx]
+                if len(set(bx)) > 1 and len(set(by)) > 1:
+                    boot.append(np.corrcoef(bx, by)[0, 1])
+            if boot:
+                lo, hi = np.percentile(boot, [2.5, 97.5])
+                rtxt = f"Pearson r = {r:.2f}, 95% CI [{lo:.2f}, {hi:.2f}], n = {n}"
+            else:
+                rtxt = f"Pearson r = {r:.2f}, n = {n}"
     # Pad the x-range so edge labels (e.g. the rightmost model) aren't clipped.
     pad = (max(xs) - min(xs)) * 0.18 or 5
     fig.update_xaxes(range=[min(xs) - pad, max(xs) + pad])
     # Pearson r in the TITLE (not an in-plot box) so it can't collide with a corner label.
     title = "Capability vs Responsibility" + (f"  ({rtxt})" if rtxt else "")
     fig.update_layout(title=title,
-                      xaxis_title="Capability  (Artificial Analysis Intelligence Index, 2026-06-18)",
+                      xaxis_title="Capability  (Artificial Analysis Intelligence Index v4.1, 2026-07)",
                       yaxis_title="RAI Score", height=560, autosize=True,
                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                       font=dict(size=14, family=_FONT, color=_FG),

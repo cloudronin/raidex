@@ -34,18 +34,25 @@ FULL = [
     "sambanova/MiniMax-M2.7",
     "sambanova/gemma-4-31B-it",
     "huggingface/microsoft/phi-4",                     # low-capability anchor (AA ~4.9)
+    # --- 2026-07 roster refresh (flagships-first; VERIFY exact ids/routes live at run time) ---
+    "anthropic/claude-fable-5",                        # Anthropic flagship; reasoning-locked; needs >=30d retention (ZDR -> 400)
+    "anthropic/claude-sonnet-5",                       # current Sonnet tier; reasoning-locked
+    "gemini/gemini-3.5-flash",                         # new full entry alongside 2.5-flash; wants temp=1
+    "openrouter/z-ai/glm-5.2",                         # current open-weight leader (MIT), via OpenRouter
+    "openrouter/deepseek/deepseek-v4-pro",             # DeepSeek V4 flagship, via OpenRouter
+    "openrouter/meta-llama/llama-4-maverick",          # Llama 4 Maverick, via OpenRouter
 ]
 # Gemini only needs the two truncated Tier B benchmarks re-run + merged.
 GEMINI = "gemini/gemini-2.5-flash"
 LIMIT = int(os.environ.get("RAIDEX_LIMIT", "300"))
-THROTTLED = ("sambanova/", "mistral/", "huggingface/")
+THROTTLED = ("sambanova/", "mistral/", "huggingface/", "openrouter/")
 
 
 def conc_for(model_id: str) -> str:
     if model_id.startswith(THROTTLED):
         return "1"          # throttling-prone providers (conc 2 still hit Mistral 429s)
-    if "opus" in model_id:
-        return "4"          # flagship; temperature handled by drop_params, rate fine here
+    if "opus" in model_id or "fable" in model_id or "sonnet-5" in model_id:
+        return "4"          # pricey reasoning-locked Anthropic flagships; gentler concurrency
     return "8"
 
 

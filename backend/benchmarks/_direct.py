@@ -31,7 +31,18 @@ litellm.drop_params = True
 # known seed; complete() also discovers new ones reactively, and the lm-eval path reads
 # this set to force temperature=1. (gpt-5.2 and earlier accept temperature=0 fine — this
 # is 5.5-specific, hence a known-set + reactive catch, not a "gpt-5*" name heuristic.)
-REJECTS_TEMP0 = {"openai/gpt-5.5"}
+REJECTS_TEMP0 = {
+    "openai/gpt-5.5",
+    # 2026-07 reasoning-locked / temperature-constrained frontier models. Seeded so the
+    # first call skips the temperature=0 double-call; complete() still discovers others
+    # reactively via BadRequestError. Gemini 3.x is included deliberately: Google
+    # recommends temperature=1 (T=0 loops/degrades), and omitting temperature makes it
+    # default to 1. (Anthropic opus stays out — litellm drop_params already handles it.)
+    "anthropic/claude-fable-5",
+    "anthropic/claude-sonnet-5",
+    "gemini/gemini-3.5-flash",
+    "gemini/gemini-3.1-pro-preview",
+}
 _NO_TEMP0 = set(REJECTS_TEMP0)
 
 _CONFIG = None
@@ -70,17 +81,17 @@ def judge_model(benchmark_id: str, default: str = "openai/gpt-4o") -> str:
     return jm if isinstance(jm, str) else default
 
 
-def complete(model_id: str, prompt: str, max_tokens: int = 512, temperature: float = 0.0) -> str:
-    """Single-turn litellm completion with retry/backoff.
+def chat(model_id: str, messages: list, max_tokens: int = 512, temperature: float = 0.0) -> str:
+    """Multi-turn litellm completion with retry/backoff.
 
-    Returns the response text (may be empty if the model genuinely produced no
-    content). Raises only if the call still fails after ``NUM_RETRIES`` — callers
-    must let that propagate (route it through ``map_safe``), so failures are counted
-    and DLQ'd rather than silently scored as wrong.
+    ``messages`` is a list of ``{"role", "content"}`` turns. Same temperature-omission
+    handling as ``complete`` (reasoning-locked models that reject temperature=0). Returns
+    response text (may be empty); raises only after ``NUM_RETRIES`` — route through
+    ``map_safe`` so failures are counted, not silently scored.
     """
     kwargs = dict(
         model=model_id,
-        messages=[{"role": "user", "content": prompt}],
+        messages=messages,
         max_tokens=max_tokens,
         num_retries=NUM_RETRIES,
         timeout=TIMEOUT,
@@ -100,6 +111,12 @@ def complete(model_id: str, prompt: str, max_tokens: int = 512, temperature: flo
         else:
             raise
     return (resp.choices[0].message.content or "").strip()
+
+
+def complete(model_id: str, prompt: str, max_tokens: int = 512, temperature: float = 0.0) -> str:
+    """Single-turn litellm completion (thin wrapper over ``chat``). Returns response text
+    (may be empty); raises only after ``NUM_RETRIES`` — route through ``map_safe``."""
+    return chat(model_id, [{"role": "user", "content": prompt}], max_tokens, temperature)
 
 
 def map_safe(fn, items, workers: int | None = None, label: str | None = None):
