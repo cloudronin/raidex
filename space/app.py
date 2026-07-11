@@ -324,6 +324,16 @@ def build_radar(models):
     return fig
 
 
+# Open-weight classifier (name-substring match), shared by the scatter colouring and the
+# hero stats so the "open models are competitive" finding is counted the same way in both.
+_OPEN_KEYS = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo",
+              "minimax", "phi", "kimi", "moonshot", "mimo", "nemotron", "mistral")
+
+
+def _is_open(nm):
+    return any(k in (nm or "").lower() for k in _OPEN_KEYS)
+
+
 def build_capability_vs_rai_scatter():
     """Capability (Artificial Analysis Intelligence Index) vs RAI Score: the core
     'does capability predict responsibility?' view. Replaces the coverage scatter,
@@ -368,11 +378,8 @@ def build_capability_vs_rai_scatter():
         a = math.degrees(math.atan2((ys[i] - cy) / yr, (xs[i] - cx) / xr)) % 360
         return next((p for hi, p in _SECT if a < hi), "middle right")
     pos_by_i = {i: _label_pos(i) for i in range(n)}
-    # Colour by weight availability so the "open models are competitive" finding is visible.
-    _OPEN = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo",
-             "minimax", "phi")
-    def _is_open(nm):
-        return any(k in nm.lower() for k in _OPEN)
+    # Colour by weight availability (module-level _is_open) so the "open models are
+    # competitive" finding is visible.
     fig = go.Figure()
     for label, color, idxs in [
             ("Closed-weight", "#4f46e5", [i for i in range(n) if not _is_open(pts[i][0])]),
@@ -549,9 +556,23 @@ def _hero_stats_html():
     ratio = (max(caps) / min(caps)) if caps and min(caps) > 0 else 0
     rng = f" vs a <b>{ratio:.0f}&times;</b> capability range" if ratio >= 2 else ""
     s1 = (f"<span class='stat'><b>{spread:.0f}-point</b> RAI spread{rng}</span>" if spread else "")
-    return ("<div class='hero-stats'>" + s1
-            + "<span class='stat'>capability barely predicts RAI (<b>r &asymp; 0.17</b>)</span>"
-            + "<span class='stat'><b>#2 overall</b> is open-weight</span></div>")
+    # Dynamic Pearson r over the capability-RAI join, so the hero never drifts from the scatter.
+    import numpy as np
+    xy = ([(CAP_SCORES[m], v) for m, v in zip(LEADERBOARD["Model"], LEADERBOARD["RAI Score"])
+           if m in CAP_SCORES and pd.notna(v)]
+          if LEADERBOARD is not None and not LEADERBOARD.empty else [])
+    s2 = ""
+    if len(xy) >= 3 and len({a for a, _ in xy}) > 1:
+        rr = float(np.corrcoef([a for a, _ in xy], [b for _, b in xy])[0, 1])
+        s2 = f"<span class='stat'>capability barely predicts RAI (<b>r &asymp; {rr:.2f}</b>)</span>"
+    # Dynamic: leaderboard rank of the highest-scoring open-weight model.
+    s3 = ""
+    if LEADERBOARD is not None and not LEADERBOARD.empty:
+        for i, m in enumerate(LEADERBOARD.sort_values("RAI Score", ascending=False)["Model"], 1):
+            if _is_open(m):
+                s3 = f"<span class='stat'>top open-weight model is <b>#{i}</b></span>"
+                break
+    return "<div class='hero-stats'>" + s1 + s2 + s3 + "</div>"
 
 
 HERO_STATS = _hero_stats_html()
