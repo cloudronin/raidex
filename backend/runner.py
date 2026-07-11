@@ -32,6 +32,7 @@ from benchmarks.ethics import ETHICS
 from benchmarks.xstest import XSTest
 from benchmarks.advglue import AdvGLUE
 from benchmarks.confaide import ConfAIde
+from benchmarks.sycophancy import Sycophancy
 
 BACKEND_VERSION = "0.1.0"
 RESULTS_REPO = "cloudronin/raidex-results"
@@ -39,7 +40,7 @@ REQUESTS_REPO = "cloudronin/raidex-requests"
 OUT_DIR = os.environ.get("RAIDEX_OUT_ROOT", "/tmp/raidex")
 
 TIERS = {
-    "A": [BBQ(), WMDP(), SimpleQA(), StrongREJECT(), ETHICS(), XSTest()],
+    "A": [BBQ(), WMDP(), SimpleQA(), StrongREJECT(), ETHICS(), XSTest(), Sycophancy()],
     "B": [AdvGLUE(), ConfAIde()],
 }
 TIERS["A+B"] = TIERS["A"] + TIERS["B"]

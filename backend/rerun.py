@@ -41,6 +41,22 @@ FULL = [
     "openrouter/z-ai/glm-5.2",                         # current open-weight leader (MIT), via OpenRouter
     "openrouter/deepseek/deepseek-v4-pro",             # DeepSeek V4 flagship, via OpenRouter
     "openrouter/meta-llama/llama-4-maverick",          # Llama 4 Maverick, via OpenRouter
+    # --- 2026-07 open-weight intersection (AA v4.1 x OpenRouter; spans AA ~44 to ~7; canaried 2026-07-08) ---
+    "openrouter/moonshotai/kimi-k2.6",
+    "openrouter/xiaomi/mimo-v2.5-pro",
+    "openrouter/deepseek/deepseek-v4-flash",
+    "openrouter/z-ai/glm-5.1",
+    "openrouter/z-ai/glm-5",
+    "openrouter/nvidia/nemotron-3-ultra-550b-a55b",
+    "openrouter/qwen/qwen3.6-27b",
+    "openrouter/qwen/qwen3.5-397b-a17b",
+    "openrouter/z-ai/glm-4.6",
+    "openrouter/mistralai/mistral-small-2603",
+    "openrouter/openai/gpt-oss-20b",
+    "openrouter/deepseek/deepseek-chat-v3-0324",
+    "openrouter/meta-llama/llama-4-scout",
+    "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+    # llama-3.1-405b-instruct dropped: no OpenRouter endpoint (404) as of 2026-07-08
 ]
 # Gemini only needs the two truncated Tier B benchmarks re-run + merged.
 GEMINI = "gemini/gemini-2.5-flash"

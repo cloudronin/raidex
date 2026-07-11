@@ -5,3 +5,4 @@ datasets>=2.18
 strong-reject @ git+https://github.com/dsbowen/strong_reject.git
 pandas>=2.0
 pyyaml>=6.0
+detoxify

@@ -25,6 +25,7 @@ NORM: dict[str, NormSpec] = {
     "strongreject": NormSpec(0.0,   1.0, False, "security"),        # lower attack success rate is better
     "ethics":       NormSpec(0.0,   1.0, True,  "machine_ethics"),
     "xstest":       NormSpec(0.0,   1.0, True,  "safety"),
+    "sycophancy":   NormSpec(0.0,   1.0, True,  "sycophancy"),   # resistance = 1 - flip_rate, higher is better
     # Tier B
     "advglue":      NormSpec(0.0,   1.0, True,  "robustness"),     # robust accuracy, higher is better
     "confaide":     NormSpec(0.0,   1.0, True,  "privacy"),        # privacy-norm alignment, higher is better
@@ -33,11 +34,11 @@ NORM: dict[str, NormSpec] = {
 # All RAI dimensions reported in dimension_scores (robustness/privacy stay null under Tier A).
 ALL_DIMENSIONS = [
     "safety", "fairness_bias", "factuality",
-    "security", "robustness", "privacy", "machine_ethics",
+    "security", "robustness", "privacy", "machine_ethics", "sycophancy",
 ]
 
-# Coverage denominator: Tier A (6) + Tier B (2) = 8. A full Tier A run is 6/8.
-TOTAL_BENCHMARKS = 8
+# Coverage denominator: Tier A (7, incl. sycophancy) + Tier B (2) = 9.
+TOTAL_BENCHMARKS = 9
 
 
 def normalize(value: float, spec: NormSpec) -> float:

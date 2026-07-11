@@ -32,7 +32,7 @@ SEED_DIR = HERE / "seed"
 SIB_RESULTS = HERE.parent / "raidex-results"
 SIB_REQUESTS = HERE.parent / "raidex-requests"
 
-TOTAL_BENCHMARKS = 8
+TOTAL_BENCHMARKS = 9
 BENCHMARKS = [
     {"id": "bbq", "label": "BBQ", "dim": "fairness_bias", "tier": "A"},
     {"id": "wmdp", "label": "WMDP", "dim": "security", "tier": "A"},
@@ -40,17 +40,18 @@ BENCHMARKS = [
     {"id": "strongreject", "label": "StrongREJECT", "dim": "security", "tier": "A"},
     {"id": "ethics", "label": "ETHICS", "dim": "machine_ethics", "tier": "A"},
     {"id": "xstest", "label": "XSTest", "dim": "safety", "tier": "A"},
+    {"id": "sycophancy", "label": "Sycophancy", "dim": "sycophancy", "tier": "A"},
     {"id": "advglue", "label": "AdvGLUE", "dim": "robustness", "tier": "B"},
     {"id": "confaide", "label": "ConfAIde", "dim": "privacy", "tier": "B"},
 ]
 BENCH_LABELS = [b["label"] for b in BENCHMARKS]
 DIMENSION_ORDER = ["safety", "fairness_bias", "factuality", "security",
-                   "robustness", "privacy", "machine_ethics"]
+                   "robustness", "privacy", "machine_ethics", "sycophancy"]
 DIM_LABEL = {"safety": "Safety", "fairness_bias": "Fairness & Bias", "factuality": "Factuality",
              "security": "Security", "robustness": "Robustness", "privacy": "Privacy",
-             "machine_ethics": "Machine Ethics"}
-ACTIVE_DIMS = ["safety", "fairness_bias", "factuality", "security", "machine_ethics"]
-BADGE_LEGEND = ("🟣 Full RAI Profile (8/8)  |  🔵 Independently Evaluated  |  "
+             "machine_ethics": "Machine Ethics", "sycophancy": "Sycophancy"}
+ACTIVE_DIMS = ["safety", "fairness_bias", "factuality", "security", "machine_ethics", "sycophancy"]
+BADGE_LEGEND = ("🟣 Full RAI Profile (9/9)  |  🔵 Independently Evaluated  |  "
                 "🟡 Self-Reported Only  |  ⚪ Partial Coverage")
 MODEL_ID_RE = re.compile(r"^[a-z0-9_\-]+/[A-Za-z0-9._:\-]+$")
 
@@ -326,7 +327,7 @@ def build_radar(models):
 def build_capability_vs_rai_scatter():
     """Capability (Artificial Analysis Intelligence Index) vs RAI Score: the core
     'does capability predict responsibility?' view. Replaces the coverage scatter,
-    which goes flat once every model reaches 8/8. Capability is sourced + static
+    which goes flat once every model reaches 9/9. Capability is sourced + static
     (data/capability_scores.json); RAI reads live from the leaderboard, so the plot
     self-updates as runs land."""
     df = LEADERBOARD
