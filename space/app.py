@@ -348,7 +348,8 @@ def build_capability_vs_rai_scatter():
         cap = CAP_SCORES.get(row["Model"])
         rai = row.get("RAI Score")
         if cap is not None and rai is not None and not pd.isna(rai):
-            pts.append((row["Model"], float(cap), float(rai)))
+            complete = str(row.get("Coverage", "")).strip() == f"{TOTAL_BENCHMARKS}/{TOTAL_BENCHMARKS}"
+            pts.append((row["Model"], float(cap), float(rai), complete))
     if not pts:
         return _empty_fig("Capability vs RAI Score")
     xs = [p[1] for p in pts]
@@ -380,41 +381,57 @@ def build_capability_vs_rai_scatter():
     pos_by_i = {i: _label_pos(i) for i in range(n)}
     # Colour by weight availability (module-level _is_open) so the "open models are
     # competitive" finding is visible.
+    # Complete-coverage points (9/9) are coloured by weight and drive the trend fit; partial
+    # points are shown but excluded from the fit, because their RAI omits a benchmark and the
+    # missingness is capability-correlated (the most-gated models cannot be scored on WMDP),
+    # which would bias the slope upward.
+    comp_i = [i for i in range(n) if pts[i][3]]
+    part_i = [i for i in range(n) if not pts[i][3]]
     fig = go.Figure()
     for label, color, idxs in [
-            ("Closed-weight", "#4f46e5", [i for i in range(n) if not _is_open(pts[i][0])]),
-            ("Open-weight", "#ea580c", [i for i in range(n) if _is_open(pts[i][0])])]:
+            ("Closed-weight", "#4f46e5", [i for i in comp_i if not _is_open(pts[i][0])]),
+            ("Open-weight", "#ea580c", [i for i in comp_i if _is_open(pts[i][0])])]:
         if idxs:
             fig.add_trace(go.Scatter(
                 x=[xs[i] for i in idxs], y=[ys[i] for i in idxs],
                 mode="markers+text", text=[_short(pts[i][0]) for i in idxs],
                 textposition=[pos_by_i[i] for i in idxs], textfont=dict(size=11),
                 name=label, marker=dict(size=13, color=color)))
+    if part_i:
+        fig.add_trace(go.Scatter(
+            x=[xs[i] for i in part_i], y=[ys[i] for i in part_i],
+            mode="markers+text", text=[_short(pts[i][0]) for i in part_i],
+            textposition=[pos_by_i[i] for i in part_i], textfont=dict(size=11, color="#9ca3af"),
+            name="Partial coverage (not fitted)",
+            marker=dict(size=12, color="rgba(0,0,0,0)", symbol="diamond",
+                        line=dict(width=1.6, color="#9ca3af"))))
     rtxt = ""
-    if len(pts) >= 3 and len(set(xs)) > 1:
+    xs_c = [xs[i] for i in comp_i]
+    ys_c = [ys[i] for i in comp_i]
+    if len(xs_c) >= 3 and len(set(xs_c)) > 1:
         import numpy as np
-        m, b = np.polyfit(xs, ys, 1)
-        xl = [min(xs), max(xs)]
+        m, b = np.polyfit(xs_c, ys_c, 1)
+        xl = [min(xs_c), max(xs_c)]
         fig.add_trace(go.Scatter(x=xl, y=[m * x + b for x in xl], mode="lines",
                                  line=dict(dash="dash", color="#9ca3af"), showlegend=False, hoverinfo="skip"))
-        r = float(np.corrcoef(xs, ys)[0, 1])
+        r = float(np.corrcoef(xs_c, ys_c)[0, 1])
         if r == r:
-            # Bootstrap 95% CI (2000 resamples, seeded) so a new r reads with its
-            # uncertainty — the scatter is the finding, not the point estimate.
-            ax, ay = np.asarray(xs), np.asarray(ys)
-            n = len(ax)
+            # Bootstrap 95% CI (2000 resamples, seeded) over the complete-coverage subset so a
+            # new r reads with its uncertainty — the scatter is the finding, not the estimate.
+            ax, ay = np.asarray(xs_c), np.asarray(ys_c)
+            nc = len(ax)
             rng = np.random.default_rng(0)
             boot = []
             for _ in range(2000):
-                idx = rng.integers(0, n, n)
+                idx = rng.integers(0, nc, nc)
                 bx, by = ax[idx], ay[idx]
                 if len(set(bx)) > 1 and len(set(by)) > 1:
                     boot.append(np.corrcoef(bx, by)[0, 1])
             if boot:
                 lo, hi = np.percentile(boot, [2.5, 97.5])
-                rtxt = f"Pearson r = {r:.2f}, 95% CI [{lo:.2f}, {hi:.2f}], n = {n}"
+                rtxt = f"Pearson r = {r:.2f}, 95% CI [{lo:.2f}, {hi:.2f}], n = {nc} (9/9 only)"
             else:
-                rtxt = f"Pearson r = {r:.2f}, n = {n}"
+                rtxt = f"Pearson r = {r:.2f}, n = {nc} (9/9 only)"
     # Pad the x-range so edge labels (e.g. the rightmost model) aren't clipped.
     pad = (max(xs) - min(xs)) * 0.18 or 5
     fig.update_xaxes(range=[min(xs) - pad, max(xs) + pad])
@@ -431,7 +448,7 @@ def build_capability_vs_rai_scatter():
     fig.update_xaxes(gridcolor=_GRID, zeroline=False)
     fig.update_yaxes(gridcolor=_GRID, zeroline=False)
     # Short coverage note, dropped well below the x-axis title to avoid overlapping it.
-    fig.add_annotation(text=f"{len(pts)} of {df['Model'].nunique()} models scored. RAI is live from the leaderboard",
+    fig.add_annotation(text=f"{len(pts)} models on the capability index; trend fitted over the {len(comp_i)} with full 9/9 coverage (partial-coverage points shown but excluded). RAI is live from the leaderboard",
                        xref="paper", yref="paper", x=0, y=-0.22, showarrow=False,
                        font=dict(size=11, color="#888"), align="left")
     return fig
@@ -556,11 +573,15 @@ def _hero_stats_html():
     ratio = (max(caps) / min(caps)) if caps and min(caps) > 0 else 0
     rng = f" vs a <b>{ratio:.0f}&times;</b> capability range" if ratio >= 2 else ""
     s1 = (f"<span class='stat'><b>{spread:.0f}-point</b> RAI spread{rng}</span>" if spread else "")
-    # Dynamic Pearson r over the capability-RAI join, so the hero never drifts from the scatter.
+    # Dynamic Pearson r over the complete-coverage (9/9) capability-RAI join, matching the
+    # scatter's fit exactly (partial-coverage models are excluded so the estimate is not
+    # inflated by capability-correlated missingness).
     import numpy as np
-    xy = ([(CAP_SCORES[m], v) for m, v in zip(LEADERBOARD["Model"], LEADERBOARD["RAI Score"])
-           if m in CAP_SCORES and pd.notna(v)]
-          if LEADERBOARD is not None and not LEADERBOARD.empty else [])
+    xy = []
+    if LEADERBOARD is not None and not LEADERBOARD.empty:
+        for m, v, cov in zip(LEADERBOARD["Model"], LEADERBOARD["RAI Score"], LEADERBOARD["Coverage"]):
+            if m in CAP_SCORES and pd.notna(v) and str(cov).strip() == f"{TOTAL_BENCHMARKS}/{TOTAL_BENCHMARKS}":
+                xy.append((CAP_SCORES[m], v))
     s2 = ""
     if len(xy) >= 3 and len({a for a, _ in xy}) > 1:
         rr = float(np.corrcoef([a for a, _ in xy], [b for _, b in xy])[0, 1])

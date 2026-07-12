@@ -33,6 +33,7 @@ litellm.drop_params = True
 # is 5.5-specific, hence a known-set + reactive catch, not a "gpt-5*" name heuristic.)
 REJECTS_TEMP0 = {
     "openai/gpt-5.5",
+    "openai/gpt-5.6",                    # 2026-07 roster-refresh v3: same reasoning-lock as 5.5
     # 2026-07 reasoning-locked / temperature-constrained frontier models. Seeded so the
     # first call skips the temperature=0 double-call; complete() still discovers others
     # reactively via BadRequestError. Gemini 3.x is included deliberately: Google

@@ -56,6 +56,12 @@ FULL = [
     "openrouter/deepseek/deepseek-chat-v3-0324",
     "openrouter/meta-llama/llama-4-scout",
     "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+    # --- 2026-07 roster refresh v3 (latest servable; canaried 2026-07-11) ---
+    "openai/gpt-5.6",                                  # reasoning-locked; input-blocks WMDP -> 8/9
+    "xai/grok-4.5",                                    # WMDP endpoint disconnects -> 8/9
+    "openrouter/minimax/minimax-m3",
+    "openrouter/moonshotai/kimi-k2.7-code",            # kimi-k2.7 base 404s; the -code variant serves
+    # gemini/gemini-3.5-pro deferred: announced but 404 on the API as of 2026-07-11
     # llama-3.1-405b-instruct dropped: no OpenRouter endpoint (404) as of 2026-07-08
 ]
 # Gemini only needs the two truncated Tier B benchmarks re-run + merged.
