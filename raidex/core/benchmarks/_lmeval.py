@@ -14,6 +14,7 @@ import subprocess
 from typing import Optional
 
 from ._direct import REJECTS_TEMP0
+from ._exe import exe
 from ._proxy import litellm_proxy
 
 OUT_ROOT = os.environ.get("RAIDEX_OUT_ROOT", "/tmp/raidex")
@@ -54,7 +55,7 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
     task_arg = ",".join(tasks) if isinstance(tasks, (list, tuple)) else tasks
     with litellm_proxy(model_id) as (base_url, served):
         cmd = [
-            "lm_eval", "--model", "local-chat-completions",
+            exe("lm_eval"), "--model", "local-chat-completions",
             "--model_args",
             f"model={served},base_url={base_url}/chat/completions,"
             f"num_concurrent={num_concurrent},max_retries={max_retries}",

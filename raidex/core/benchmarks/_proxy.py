@@ -13,6 +13,8 @@ import subprocess
 import time
 import urllib.request
 
+from ._exe import exe
+
 
 @contextlib.contextmanager
 def litellm_proxy(model_id: str, port: int | None = None, timeout_s: int = 90):
@@ -27,7 +29,7 @@ def litellm_proxy(model_id: str, port: int | None = None, timeout_s: int = 90):
     proc = subprocess.Popen(
         # --drop_params: silently drop provider-unsupported params (e.g. Anthropic
         # rejects `seed`, which lm-eval sends) instead of 400-ing the request.
-        ["litellm", "--model", model_id, "--port", str(port), "--drop_params"],
+        [exe("litellm"), "--model", model_id, "--port", str(port), "--drop_params"],
         stdout=log, stderr=subprocess.STDOUT,
     )
     try:
