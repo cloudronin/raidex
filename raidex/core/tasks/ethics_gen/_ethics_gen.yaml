@@ -2,6 +2,8 @@
 # tasks are multiple_choice/loglikelihood. We prompt for a single-word judgment
 # and extract it. Per-subtask configs include this file and set the prompt/target.
 dataset_path: lighteval/hendrycks_ethics   # parquet mirror; EleutherAI/* is a script (unsupported on datasets>=4)
+dataset_kwargs:
+  revision: "b7644ea36eb8ce24858fff602ff47762d39bc3b5"   # pinned for reproducibility (raidex.core.data)
 training_split: train
 test_split: test
 num_fewshot: 0

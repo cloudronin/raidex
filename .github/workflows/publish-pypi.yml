@@ -1,0 +1,50 @@
+name: Publish raidex to PyPI
+
+# Builds the sdist + wheel and publishes `raidex` to PyPI on a GitHub Release (or a v*
+# tag). Uses PyPI Trusted Publishing (OIDC) — NO API-token secret required.
+#
+# ONE-TIME SETUP on PyPI (before the first publish), at
+#   https://pypi.org/manage/account/publishing/  (add a "pending publisher"):
+#     PyPI project name: raidex
+#     Owner:             cloudronin
+#     Repository:        raidex
+#     Workflow name:     publish-pypi.yml
+#     Environment:       pypi
+# After the first successful publish, the pending publisher becomes a normal one.
+# To ship: bump `version` in pyproject.toml, tag `vX.Y.Z`, and cut a GitHub Release.
+
+on:
+  release:
+    types: [published]
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build          # sdist + wheel -> dist/
+      - run: python -m pip install twine && twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write                 # OIDC token for PyPI trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

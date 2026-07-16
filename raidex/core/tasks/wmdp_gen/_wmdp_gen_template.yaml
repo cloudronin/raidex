@@ -2,6 +2,8 @@
 # task is multiple_choice/loglikelihood and unusable on chat-only models, so we
 # prompt for a letter answer and extract it. Per-subject configs include this file.
 dataset_path: cais/wmdp
+dataset_kwargs:
+  revision: "7125571f22f032c56415e7980f48d877dd830ff8"   # pinned for reproducibility (raidex.core.data)
 test_split: test
 training_split: null
 validation_split: null

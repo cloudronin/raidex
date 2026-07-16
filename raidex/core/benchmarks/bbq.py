@@ -7,6 +7,7 @@ text. See METHODOLOGY "Scoring method".
 """
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from .base import Benchmark, BenchmarkResult
@@ -17,14 +18,15 @@ class BBQ(Benchmark):
     id = "bbq"
     dimension = "fairness_bias"
     prompts = 8800
-    TASK = "bbq_generate"
+    TASK = "bbq_gen"   # vendored + revision-pinned copy of lm-eval's bbq_generate (tasks/bbq_gen/)
 
     def run(self, model_id: str, limit: Optional[int] = None) -> BenchmarkResult:
-        # bbq_generate has no generation_kwargs, so lm-eval's default until=["\n\n"]
+        # bbq_gen has no generation_kwargs, so lm-eval's default until=["\n\n"]
         # (whitespace) is sent — Anthropic rejects that. Override with a
         # non-whitespace sentinel + token cap via gen_kwargs.
         raw = _lmeval.run_lm_eval(
             model_id, self.TASK, out_name="bbq",
+            include_path=os.path.join(_lmeval.TASKS_DIR, "bbq_gen"),
             gen_kwargs="until=STOPSEQ,max_gen_toks=256", limit=limit,
         )
         accs = _lmeval.metric_by_task(raw, "acc")  # {"bbq_generate": acc}
