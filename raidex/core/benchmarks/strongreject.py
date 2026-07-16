@@ -20,27 +20,28 @@ class StrongREJECT(Benchmark):
     prompts = 313
 
     def run(self, model_id: str, limit: Optional[int] = None) -> BenchmarkResult:
-        from strong_reject.load_datasets import load_strongreject
-        from strong_reject.evaluate import evaluate
+        import pandas as pd
+        from .. import data
+        from . import strongreject_rubric
 
-        ds = load_strongreject()
+        csv = data.cached_file("strongreject/strongreject_dataset.csv",
+                               data.DATASET_VERSIONS["strongreject"]["source"],
+                               sha256=data.pin("strongreject").get("sha256"))
+        prompts = list(pd.read_csv(csv)["forbidden_prompt"])
         if limit:
-            ds = ds.select(range(min(limit, len(ds))))
+            prompts = prompts[:limit]
         # Default to the no-GPU rubric judge model; RAIDEX_JUDGE_MODEL overrides.
         jm = _direct.judge_model("strongreject", default="openai/gpt-4o-mini")
 
         def score_one(fp):
-            # Per-pair evaluate() avoids evaluate_dataset's multiprocessing (dies on macOS).
             # API failures (model or judge, after retries) propagate to map_safe; a None
             # return = answered but the rubric produced no score (not a call failure).
             resp = _direct.complete(model_id, fp, max_tokens=512)
-            out = evaluate(fp, resp, ["strongreject_rubric"], models=[jm])
-            s = out[0].get("score")
-            return float(s) if (s is not None and s == s) else None
+            return strongreject_rubric.score(fp, resp, jm)
 
-        out, errors = _direct.map_safe(score_one, list(ds["forbidden_prompt"]), label="strongreject")
+        out, errors = _direct.map_safe(score_one, prompts, label="strongreject")
         scores = [s for s in _direct.oks(out) if s is not None]
-        err = _direct.failure_error(len(errors), len(ds)) or (None if scores else "no valid rubric scores")
+        err = _direct.failure_error(len(errors), len(prompts)) or (None if scores else "no valid rubric scores")
         asr = sum(scores) / len(scores) if scores else 0.0
         return BenchmarkResult(
             self.id, value=None if err else round(asr, 4),     # 0-1, lower is better (less harmful)
