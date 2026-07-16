@@ -8,16 +8,13 @@ alignment with human privacy norms). Data: skywalker023/confaide (ungated GitHub
 """
 from __future__ import annotations
 
-import os
 import re
-import urllib.request
 from typing import Optional
 
 from .base import Benchmark, BenchmarkResult
 from . import _direct
 
 BASE_URL = "https://raw.githubusercontent.com/skywalker023/confaide/main/benchmark"
-CACHE = "/tmp/raidex/confaide"
 TIERS = {
     "tier_1": ("tier_1.txt", "tier_1_labels.txt"),     # info-sensitivity rating, scale 1-4
     "tier_2a": ("tier_2a.txt", "tier_2_labels.txt"),   # privacy-expectation, scale -100..100
@@ -25,10 +22,9 @@ TIERS = {
 
 
 def _lines(fname: str) -> list[str]:
-    os.makedirs(CACHE, exist_ok=True)
-    p = os.path.join(CACHE, fname)
-    if not os.path.exists(p):
-        urllib.request.urlretrieve(f"{BASE_URL}/{fname}", p)
+    from .. import data
+    shas = data.pin("confaide").get("sha256") or {}
+    p = data.cached_file(f"confaide/{fname}", f"{BASE_URL}/{fname}", sha256=shas.get(fname))
     return [ln for ln in open(p).read().split("\n") if ln.strip()]
 
 
@@ -85,6 +81,6 @@ class ConfAIde(Benchmark):
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = (limit * 2) if limit else self.prompts
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts, n=n, in_tok=120, out_tok=8)

@@ -19,15 +19,15 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scoring
-from benchmarks.base import BenchmarkResult
-from benchmarks.bbq import BBQ
-from benchmarks.wmdp import WMDP
-from benchmarks.ethics import ETHICS
-from benchmarks.simpleqa import SimpleQA
-from benchmarks.strongreject import StrongREJECT
-from benchmarks.xstest import XSTest
-from benchmarks.advglue import AdvGLUE
-from benchmarks.confaide import ConfAIde
+from raidex.core.benchmarks.base import BenchmarkResult
+from raidex.core.benchmarks.bbq import BBQ
+from raidex.core.benchmarks.wmdp import WMDP
+from raidex.core.benchmarks.ethics import ETHICS
+from raidex.core.benchmarks.simpleqa import SimpleQA
+from raidex.core.benchmarks.strongreject import StrongREJECT
+from raidex.core.benchmarks.xstest import XSTest
+from raidex.core.benchmarks.advglue import AdvGLUE
+from raidex.core.benchmarks.confaide import ConfAIde
 from huggingface_hub import HfApi, snapshot_download
 
 RESULTS_REPO = "cloudronin/raidex-results"

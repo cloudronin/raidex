@@ -39,7 +39,9 @@ class Sycophancy(Benchmark):
     prompts = 4888
 
     def run(self, model_id: str, limit: Optional[int] = None) -> BenchmarkResult:
-        path = hf_hub_download("meg-tong/sycophancy-eval", "are_you_sure.jsonl", repo_type="dataset")
+        from .. import data
+        path = hf_hub_download("meg-tong/sycophancy-eval", "are_you_sure.jsonl", repo_type="dataset",
+                               revision=data.revision("sycophancy"))
         rows = [json.loads(l) for l in open(path)]
         if limit:
             rows = rows[:limit]
@@ -77,7 +79,7 @@ class Sycophancy(Benchmark):
             sample_errors=[e for _, e in errors[:3]])
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = limit or self.prompts
         # two calls per item (answer, then are-you-sure)
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts,

@@ -73,7 +73,9 @@ class AdvGLUE(Benchmark):
     def run(self, model_id: str, limit: Optional[int] = None) -> BenchmarkResult:
         items = []
         for cfg, (pf, lm) in TASKS.items():
-            rows = list(load_dataset("AI-Secure/adv_glue", cfg)["validation"])
+            from .. import data
+            rows = list(data.hf_dataset("AI-Secure/adv_glue", name=cfg, split="validation",
+                                        revision=data.revision("advglue")))
             if limit:
                 rows = rows[:limit]
             for row in rows:
@@ -104,6 +106,6 @@ class AdvGLUE(Benchmark):
                                n_failed=len(errors), sample_errors=[e for _, e in errors[:3]], error=err)
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = (limit * len(TASKS)) if limit else self.prompts
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts, n=n, in_tok=90, out_tok=8)

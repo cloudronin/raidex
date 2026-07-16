@@ -20,7 +20,6 @@ from .base import Benchmark, BenchmarkResult
 from . import _direct
 
 CSV_URL = "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
-CSV_PATH = "/tmp/raidex/simple_qa_test_set.csv"
 
 GRADER = """You are grading whether a model's answer to a question is correct, given the gold answer.
 
@@ -83,7 +82,7 @@ class SimpleQA(Benchmark):
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = limit or self.prompts
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts, n=n,
                           in_tok=60, out_tok=120, judge_calls=n, judge_in=200, judge_out=4,
@@ -91,7 +90,7 @@ class SimpleQA(Benchmark):
 
 
 def _load_csv() -> "pd.DataFrame":
-    os.makedirs("/tmp/raidex", exist_ok=True)
-    if not os.path.exists(CSV_PATH):
-        urllib.request.urlretrieve(CSV_URL, CSV_PATH)
-    return pd.read_csv(CSV_PATH)
+    from .. import data
+    path = data.cached_file("simpleqa/simple_qa_test_set.csv", CSV_URL,
+                            sha256=data.pin("simpleqa").get("sha256"))
+    return pd.read_csv(path)

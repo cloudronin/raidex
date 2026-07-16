@@ -50,7 +50,7 @@ class StrongREJECT(Benchmark):
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = limit or self.prompts
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts, n=n,
                           in_tok=60, out_tok=300, judge_calls=n, judge_in=600, judge_out=80,

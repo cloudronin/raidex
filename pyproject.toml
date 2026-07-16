@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raidex"
+version = "0.1.0"
+description = "Self-contained CLI to measure an LLM against the Raidex Responsible-AI index"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Vishnu Vettrivel" }]
+keywords = ["llm", "evaluation", "responsible-ai", "safety", "benchmark"]
+dependencies = [
+  "litellm[proxy]>=1.40",
+  "lm-eval[api]>=0.4.5",
+  "datasets>=2.18",
+  "huggingface_hub>=0.23",   # core: dataset fetch (hf_hub_download / load_dataset); NOT the upload/queue service
+  "pandas>=2.0",
+  "numpy>=1.24",
+  "pyyaml>=6.0",
+  "platformdirs>=3.0",       # cross-platform cache dir for fetch-once-cache
+  # strong-reject: vendored into raidex/core/benchmarks/strongreject_rubric.py (Phase 3) — no git+https dep.
+  # detoxify: dropped (only the orphan toxicity.py used it; not in TIERS).
+]
+
+[project.scripts]
+raidex = "raidex.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["raidex*"]        # do NOT auto-discover backend/ or space/
+
+[tool.setuptools.package-data]
+"raidex.core" = ["config.yaml", "tasks/**/*.yaml", "tasks/**/*.py"]

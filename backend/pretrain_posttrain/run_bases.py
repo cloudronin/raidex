@@ -81,7 +81,7 @@ def _verify_instruct(model_id: str) -> dict | None:
 
 def _check_base_available(model_id: str) -> bool:
     """Canary call: one minimal completion to confirm the base model ID resolves."""
-    from benchmarks._direct import complete
+    from raidex.core.benchmarks._direct import complete
     try:
         complete(model_id, "Hello", max_tokens=5)
         return True
@@ -96,7 +96,7 @@ def _dump_judge_completions(model_id: str, out_dir: str, n: int = 5) -> None:
     Saves to <out_dir>/base_sanity/<model_slug>_<benchmark>.txt. Inspect these
     before interpreting the delta for format_confounded benchmarks.
     """
-    from benchmarks._direct import complete
+    from raidex.core.benchmarks._direct import complete
 
     sanity_dir = Path(out_dir) / "base_sanity"
     sanity_dir.mkdir(parents=True, exist_ok=True)

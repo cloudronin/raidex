@@ -1,14 +1,15 @@
-"""Raidex eval runner.
+"""Raidex eval backend runner — the service frontend over ``raidex.core``.
 
 Usage:
   python runner.py --dry-run --model openai/gpt-5.2 --tier A          # cost estimate only
   python runner.py --model openai/qwen3.7-max --tier A --limit 50 --no-upload   # smoke test
-  python runner.py --model anthropic/claude-opus-4-6 --tier A         # full run + upload
+  python runner.py --model anthropic/claude-opus-4-8 --tier A         # full run + upload
   python runner.py --poll                                             # drain the request queue
 
---limit samples the big benchmarks; small datasets (StrongREJECT, XSTest) always
-run full. Model IDs use litellm format provider/model_name; litellm reads API keys
-from env vars. Run from the repo root.
+The pure eval-and-score core lives in ``raidex.core.eval``; this module adds the
+service-only concerns — per-model cost cap, DLQ, results-dataset upload, and the request
+queue poller. ``--limit`` samples the big benchmarks; small datasets always run full. Run
+from the ``backend/`` dir so cwd is on sys.path for ``import dlq``.
 """
 from __future__ import annotations
 
@@ -16,74 +17,20 @@ import argparse
 import json
 import os
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
-
 import dlq
-import scoring
-from benchmarks.base import BenchmarkResult
-from benchmarks.bbq import BBQ
-from benchmarks.wmdp import WMDP
-from benchmarks.simpleqa import SimpleQA
-from benchmarks.strongreject import StrongREJECT
-from benchmarks.ethics import ETHICS
-from benchmarks.xstest import XSTest
-from benchmarks.advglue import AdvGLUE
-from benchmarks.confaide import ConfAIde
-from benchmarks.sycophancy import Sycophancy
+from raidex.core.eval import (
+    TIERS, SAMPLE_EXEMPT, resolve_benches, estimate_costs, evaluate,
+    load_config, _eff, _utc_iso, _result_block, _finalize_composite,
+)
 
-BACKEND_VERSION = "0.1.0"
 RESULTS_REPO = "cloudronin/raidex-results"
 REQUESTS_REPO = "cloudronin/raidex-requests"
 OUT_DIR = os.environ.get("RAIDEX_OUT_ROOT", "/tmp/raidex")
 
-TIERS = {
-    "A": [BBQ(), WMDP(), SimpleQA(), StrongREJECT(), ETHICS(), XSTest(), Sycophancy()],
-    "B": [AdvGLUE(), ConfAIde()],
-}
-TIERS["A+B"] = TIERS["A"] + TIERS["B"]
 
-# Small datasets — always run full, ignore --limit sampling.
-SAMPLE_EXEMPT = {"strongreject", "xstest", "advglue", "confaide"}
-
-_CONFIG = None
-
-
-def load_config(path: str | None = None) -> dict:
-    global _CONFIG
-    if _CONFIG is None:
-        cfg = Path(path) if path else Path(__file__).resolve().parent / "config.yaml"
-        _CONFIG = yaml.safe_load(cfg.read_text())
-    return _CONFIG
-
-
-def _utc_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def _eff(bid: str, limit: int | None) -> int | None:
-    """Effective limit for a benchmark: small datasets ignore sampling and run full."""
-    return None if (limit and bid in SAMPLE_EXEMPT) else limit
-
-
-def _result_block(r: BenchmarkResult) -> dict:
-    """The per-benchmark dict stored in a result JSON's ``results`` map."""
-    return {
-        "value": r.value,
-        "eval_source": r.eval_source,
-        "eval_date": _utc_iso(),
-        "raw": r.raw,
-        "judge_model": r.judge_model,
-        "error": r.error,
-        "n_samples": r.n_samples,
-        "n_failed": r.n_failed,
-    }
-
-
-def _dlq_if_failed(model_id: str, bid: str, r: BenchmarkResult, *,
-                   tier: str | None, limit: int | None) -> None:
+def _dlq_if_failed(model_id: str, bid: str, r, *, tier: str | None, limit: int | None) -> None:
     """Record a DLQ entry when a benchmark errored (guard tripped) or had any calls
     fail after retries — so the failure can be replayed later, not silently kept."""
     nf = r.n_failed or 0
@@ -98,15 +45,6 @@ def _dlq_if_failed(model_id: str, bid: str, r: BenchmarkResult, *,
     )
     print(f"  ⚠ DLQ[{'guard-tripped' if r.error else 'partial'}] {bid}: "
           f"{r.error or str(nf) + ' calls failed'}")
-
-
-def _finalize_composite(output: dict) -> dict:
-    """Recompute the composite from ``output['results']`` and echo normalized scores back."""
-    composite = scoring.compute_composite(output["results"])
-    for bid, nv in composite.pop("normalized").items():
-        output["results"][bid]["normalized"] = nv
-    output["composite"] = composite
-    return output
 
 
 def _persist(output: dict, model_id: str, no_upload: bool) -> None:
@@ -147,11 +85,11 @@ def _load_existing_result(model_id: str) -> dict | None:
 
 def run_eval(model_id: str, tier: str = "A", dry_run: bool = False,
              limit: int | None = None, no_upload: bool = False) -> None:
-    if tier not in TIERS:
-        raise ValueError(f"Unknown tier {tier!r}; supported: {list(TIERS)}")
-    benches = TIERS[tier]
+    """Estimate cost, enforce the per-model cap, run the core eval (recording failures to
+    the DLQ), and persist/upload. The eval-and-score itself is ``raidex.core.eval.evaluate``."""
+    benches = resolve_benches(tier=tier)
 
-    estimates = {b.id: b.estimate_cost(model_id, _eff(b.id, limit)) for b in benches}
+    estimates = estimate_costs(model_id, benches, limit)
     total = round(sum(estimates.values()), 2)
     if dry_run:
         suffix = f", limit {limit}" if limit else ""
@@ -165,28 +103,10 @@ def run_eval(model_id: str, tier: str = "A", dry_run: bool = False,
     if total > cap:
         raise RuntimeError(f"Estimated ${total:.2f} exceeds per-model cap ${cap}. Aborting.")
 
-    results: dict[str, dict] = {}
-    for b in benches:
-        print(f"Running {b.__class__.__name__} against {model_id} ...")
-        try:
-            r = b.run(model_id, limit=_eff(b.id, limit))
-        except Exception as e:  # record, don't sink the whole model
-            print(f"  ! {b.id} failed: {e}")
-            r = BenchmarkResult(benchmark_id=b.id, value=None, error=str(e))
-        results[b.id] = _result_block(r)
-        _dlq_if_failed(model_id, b.id, r, tier=tier, limit=_eff(b.id, limit))
-
-    output = _finalize_composite({
-        "config": {
-            "model_id": model_id,
-            "model_name": model_id.split("/")[-1],
-            "developer": model_id.split("/")[0],
-            "eval_date": _utc_iso(),
-            "backend_version": BACKEND_VERSION,
-        },
-        "results": results,
-        "composite": None,
-    })
+    output = evaluate(
+        model_id, benches, limit=limit,
+        on_bench_result=lambda bid, r: _dlq_if_failed(model_id, bid, r, tier=tier, limit=_eff(bid, limit)),
+    )
     _persist(output, model_id, no_upload)
 
 

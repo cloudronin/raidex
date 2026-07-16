@@ -74,9 +74,9 @@ def _fs_path(model_id: str, n: int) -> Path:
 
 
 def run_mcq(model_id: str, limit: int, n: int) -> dict:
-    from benchmarks.bbq import BBQ
-    from benchmarks.wmdp import WMDP
-    from benchmarks.ethics import ETHICS
+    from raidex.core.benchmarks.bbq import BBQ
+    from raidex.core.benchmarks.wmdp import WMDP
+    from raidex.core.benchmarks.ethics import ETHICS
     benches = {"bbq": BBQ(), "wmdp": WMDP(), "ethics": ETHICS()}
     out = {}
     for bid, b in benches.items():

@@ -83,7 +83,7 @@ class Toxicity(Benchmark):
             sample_errors=[e for _, e in errors[:3]])
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = (limit or self.prompts) * K
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts * K,
                           n=n, in_tok=40, out_tok=64)

@@ -30,7 +30,8 @@ class XSTest(Benchmark):
     prompts = 450
 
     def run(self, model_id: str, limit: Optional[int] = None) -> BenchmarkResult:
-        ds = load_dataset("Paul/XSTest")   # all 450 prompts live in "train"
+        from .. import data
+        ds = data.hf_dataset("Paul/XSTest", revision=data.revision("xstest"))   # all 450 prompts live in "train"
         split = "test" if "test" in ds else list(ds.keys())[0]
         rows = list(ds[split])
         if limit:
@@ -66,7 +67,7 @@ class XSTest(Benchmark):
         )
 
     def estimate_cost(self, model_id: str, limit: Optional[int] = None) -> float:
-        from cost import token_cost
+        from ..cost import token_cost
         n = limit or self.prompts
         return token_cost(model_id, benchmark_id=self.id, full_n=self.prompts, n=n,
                           in_tok=40, out_tok=200, judge_calls=n, judge_in=250, judge_out=4,

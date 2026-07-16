@@ -115,7 +115,7 @@ def smoke(pair: dict, out_dir: str) -> bool:
     run_bases._dump_judge_completions(base_id, out_dir)
 
     # 3) Validate the lm-eval path (proxy→Ollama→lm_eval) on BBQ @ limit 5, base.
-    from benchmarks.bbq import BBQ
+    from raidex.core.benchmarks.bbq import BBQ
     print("  lm-eval plumbing: BBQ @ limit 5 (base) ...")
     rb = BBQ().run(base_id, limit=5)
     print(f"    BBQ base value={rb.value} n={rb.n_samples} err={rb.error}")
@@ -124,7 +124,7 @@ def smoke(pair: dict, out_dir: str) -> bool:
         return False
 
     # 4) Validate the judge path (target→SambaNova judge→score) on XSTest @ limit 6, base.
-    from benchmarks.xstest import XSTest
+    from raidex.core.benchmarks.xstest import XSTest
     print("  judge plumbing: XSTest @ limit 6 (base) ...")
     rx = XSTest().run(base_id, limit=6)
     print(f"    XSTest base value={rx.value} n={rx.n_samples} judge={rx.judge_model} err={rx.error}")
