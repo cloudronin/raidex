@@ -8,10 +8,29 @@ Raidex evaluates frontier LLMs across open RAI benchmarks — safety, fairness, 
 - **Results dataset:** https://huggingface.co/datasets/cloudronin/raidex-results
 - **Eval queue:** https://huggingface.co/datasets/cloudronin/raidex-requests
 
+## Measure your own model: the `raidex` CLI
+
+`pip install raidex` gives you the same measurement core the leaderboard runs, as a self-contained CLI. Score your own fine-tuned or self-hosted model against the Raidex index **in your own environment** — no account, no queue, no upload, no dependency on Raidex servers — and get **board-comparable** per-dimension + composite RAI scores.
+
+```bash
+pip install raidex
+
+raidex eval --model openai/gpt-5.2 --tier A                                      # any litellm model
+raidex eval --model http://localhost:8000/v1 --served-name my-model --tier A+B  # a local OpenAI-compatible endpoint
+raidex eval --model ... --benchmarks bbq,strongreject                           # a subset
+raidex eval --model ... --judge anthropic/claude-opus-4-8                        # configure the LLM judge
+raidex eval --model ... --dry-run                                               # cost estimate only
+raidex fetch-data                                                               # pre-cache data for offline / air-gapped use
+raidex eval --model ... --offline --output results.json                         # run with zero network
+```
+
+It prints per-dimension + composite RAI Score + coverage (N/9) and writes a self-describing JSON — model spec, pinned dataset versions, judge, sampling, timestamp — that never leaves your machine. Benchmarks with no judge configured are skipped with honestly reduced coverage, not a failure. Scores are identical in scale to the leaderboard (same core, same benchmarks, same normalization).
+
 ## Repository layout
 
+- [`raidex/`](raidex/) — the pip-installable **`raidex` CLI** (`raidex/cli.py`) over the pure **`raidex.core`** eval-and-score library. The core is the shared foundation; the backend service and the CLI are two thin frontends over it, which is why a local score matches the board.
 - [`space/`](space/) — the HuggingFace **Space** (Gradio app): leaderboard, the capability-vs-RAI gap visual, model cards, and the submit form. Deployed to the Space above.
-- [`backend/`](backend/) — the **eval runner**: polls the request queue, runs the benchmarks against any model through litellm, scores them, and writes results to the dataset.
+- [`backend/`](backend/) — the **eval runner / service**: polls the request queue, calls `raidex.core`, and writes results to the dataset.
 
 The two datasets (`raidex-results`, `raidex-requests`) are *generated data* and live on the HF Hub, not in this repo.
 
