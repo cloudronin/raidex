@@ -48,3 +48,5 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true   # a re-trigger (e.g. tag + Release for the same version) no-ops instead of failing
