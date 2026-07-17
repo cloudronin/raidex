@@ -84,7 +84,7 @@ See [`space/METHODOLOGY.md`](space/METHODOLOGY.md) for the index design, generat
 
 There is also a public board of frontier models, produced by the same core:
 
-- **Live leaderboard:** https://huggingface.co/spaces/cloudronin/raidex
+- **Live leaderboard:** https://huggingface.co/spaces/cloudronin/raidex-space
 - **Results dataset:** https://huggingface.co/datasets/cloudronin/raidex-results
 - **Eval queue:** https://huggingface.co/datasets/cloudronin/raidex-requests
 
