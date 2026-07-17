@@ -6,4 +6,4 @@ frontend over the same core, so a local ``raidex eval`` score is identical in sc
 published leaderboard.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

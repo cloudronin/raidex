@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raidex"
-version = "0.1.0"
+version = "0.1.1"
 description = "Self-contained CLI to measure an LLM against the Raidex Responsible-AI index"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"   # upper bound: litellm proxy's uvloop is not yet Python 3.14 compatible
 license = { file = "LICENSE" }
 authors = [{ name = "Vishnu Vettrivel" }]
 keywords = ["llm", "evaluation", "responsible-ai", "safety", "benchmark"]
