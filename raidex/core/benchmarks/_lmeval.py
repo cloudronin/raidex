@@ -13,7 +13,7 @@ import os
 import subprocess
 from typing import Optional
 
-from ._direct import REJECTS_TEMP0
+from ._direct import REJECTS_TEMP0, REASONING_TOKEN_FLOOR
 from ._exe import exe
 from ._proxy import litellm_proxy
 
@@ -48,7 +48,10 @@ def run_lm_eval(model_id: str, tasks, *, out_name: str,
     if model_id in REJECTS_TEMP0:
         kw = dict(p.split("=", 1) for p in gen_kwargs.split(",")) if gen_kwargs else {}
         kw["temperature"] = "1"
-        kw["max_gen_toks"] = str(max(int(kw.get("max_gen_toks", 0)), 2048))
+        # Per-model reasoning floor (default 2048); Inkling reasons past 2048 and truncates, so
+        # it gets a higher floor. A cap, so models that finish early cost no more.
+        floor = REASONING_TOKEN_FLOOR.get(model_id, 2048)
+        kw["max_gen_toks"] = str(max(int(kw.get("max_gen_toks", 0)), floor))
         gen_kwargs = ",".join(f"{k}={v}" for k, v in kw.items())
     out_dir = os.path.join(OUT_ROOT, out_name)
     os.makedirs(out_dir, exist_ok=True)

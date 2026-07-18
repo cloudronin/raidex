@@ -31,6 +31,7 @@ DEVELOPER_RULES = [
     ("phi", "Microsoft"),
     ("glm", "Zhipu AI"), ("olmo", "Allen AI"), ("command", "Cohere"),
     ("kimi", "Moonshot AI"), ("moonshot", "Moonshot AI"), ("mimo", "Xiaomi"), ("nemotron", "NVIDIA"),
+    ("inkling", "Thinking Machines"), ("thinkingmachines", "Thinking Machines"),
 ]
 
 

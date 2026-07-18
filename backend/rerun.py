@@ -61,13 +61,17 @@ FULL = [
     "xai/grok-4.5",                                    # WMDP endpoint disconnects -> 8/9
     "openrouter/minimax/minimax-m3",
     "openrouter/moonshotai/kimi-k2.7-code",            # kimi-k2.7 base 404s; the -code variant serves
+    # --- 2026-07 Inkling add (Thinking Machines, via Together AI) ---
+    "together_ai/thinkingmachines/Inkling",            # reasoning-locked (thinking on by default); AA v4.1 = 41 (top open model); should answer WMDP -> clean 9/9
+    # --- 2026-07 Kimi K3 add (Moonshot AI, via OpenRouter) ---
+    "openrouter/moonshotai/kimi-k3",                   # reasoning-locked (max effort); AA v4.1 = 57.1 (top open, 4th overall); OpenRouter warns of frequent 429s (upstream capacity)
     # gemini/gemini-3.5-pro deferred: announced but 404 on the API as of 2026-07-11
     # llama-3.1-405b-instruct dropped: no OpenRouter endpoint (404) as of 2026-07-08
 ]
 # Gemini only needs the two truncated Tier B benchmarks re-run + merged.
 GEMINI = "gemini/gemini-2.5-flash"
 LIMIT = int(os.environ.get("RAIDEX_LIMIT", "300"))
-THROTTLED = ("sambanova/", "mistral/", "huggingface/", "openrouter/")
+THROTTLED = ("sambanova/", "mistral/", "huggingface/", "openrouter/", "nvidia_nim/")
 
 
 def conc_for(model_id: str) -> str:

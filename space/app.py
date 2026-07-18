@@ -327,7 +327,7 @@ def build_radar(models):
 # Open-weight classifier (name-substring match), shared by the scatter colouring and the
 # hero stats so the "open models are competitive" finding is counted the same way in both.
 _OPEN_KEYS = ("llama", "deepseek", "qwen", "gemma", "gpt-oss", "glm", "mixtral", "olmo",
-              "minimax", "phi", "kimi", "moonshot", "mimo", "nemotron", "mistral")
+              "minimax", "phi", "kimi", "moonshot", "mimo", "nemotron", "mistral", "inkling")
 
 
 def _is_open(nm):

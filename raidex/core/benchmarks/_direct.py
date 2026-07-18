@@ -43,8 +43,22 @@ REJECTS_TEMP0 = {
     "anthropic/claude-sonnet-5",
     "gemini/gemini-3.5-flash",
     "gemini/gemini-3.1-pro-preview",
+    "together_ai/thinkingmachines/Inkling",  # Inkling (Together AI): reasoning model, thinking on by default -> reject temp 0
+    "openrouter/moonshotai/kimi-k3",          # Kimi K3 (OpenRouter): reasoning model (max effort only) -> reject temp 0
 }
 _NO_TEMP0 = set(REJECTS_TEMP0)
+
+# Models whose reasoning tokens count against the *output* budget and run long, so a small
+# max_tokens truncates the answer to empty content (litellm returns null; lm-eval then scores
+# the empty placeholder as wrong). Floor their per-call budget high enough that reasoning + the
+# short answer both fit. Only these models are affected; every other model keeps the caller's
+# value, so established board results are unchanged. (Inkling is a reasoning model whose thinking
+# counts against the output budget and runs long, so a bigger cap keeps its answer from truncating;
+# reasoning_effort is not honored, so the token cap is the only lever.)
+REASONING_TOKEN_FLOOR = {
+    "together_ai/thinkingmachines/Inkling": 8192,
+    "openrouter/moonshotai/kimi-k3": 8192,
+}
 
 _CONFIG = None
 
@@ -90,6 +104,7 @@ def chat(model_id: str, messages: list, max_tokens: int = 512, temperature: floa
     response text (may be empty); raises only after ``NUM_RETRIES`` — route through
     ``map_safe`` so failures are counted, not silently scored.
     """
+    max_tokens = max(max_tokens, REASONING_TOKEN_FLOOR.get(model_id, 0))
     kwargs = dict(
         model=model_id,
         messages=messages,
